@@ -13,16 +13,13 @@ st.set_page_config(page_title="PROFINANCE | Análisis Financiero", page_icon="�
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
-    /* Aumentar tamaño de fuente de las pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.3rem;
         font-weight: 600;
     }
-    /* Color de fondo suave para el dashboard */
     .stApp {
         background-color: #f9f9f9; 
     }
-    /* Ajuste fino para alinear el título verticalmente con el banner */
     .main-header-container {
         display: flex;
         align-items: center;
@@ -30,31 +27,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (NUEVO: Título Izq, Banner Der) ---
-# Creamos columnas: Izquierda (más ancha) para texto, Derecha (más estrecha) para imagen
+# --- LAYOUT DE CABECERA ---
 c_head_text, c_head_img = st.columns([2.5, 1], gap="medium")
 
 with c_head_text:
-    # Título y subtítulo a la izquierda
     st.title("Análisis de Estados Financieros")
     st.markdown("### Oscar Menacho | Consultoría Financiera Corporativa")
 
 with c_head_img:
-    # Banner a la derecha, restringido por el ancho de la columna
     banner_file = "banner.jpg"
     if os.path.exists(banner_file):
-        # Al quitar use_column_width, la imagen no se estira excesivamente
         st.image(banner_file) 
     else:
         st.warning(f"⚠️ Falta 'banner.jpg'")
 
-st.divider() # Una línea separadora elegante después de la cabecera
+st.divider()
 
-# --- PALETA DE COLORES CORPORATIVOS ---
+# --- PALETA DE COLORES ---
 CORPORATE_COLORS = ['#004c70', '#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4']
 
-# --- FUNCIONES DE LÓGICA DE CÁLCULO ---
-
+# --- FUNCIONES DE LÓGICA ---
 def encontrar_cuenta(df, lista_alias, hacer_abs=False):
     for alias in lista_alias:
         fila_encontrada = df[df.index.str.contains(alias, case=False, na=False)]
@@ -79,17 +71,17 @@ def procesar_balance(df_balance):
     df = df_balance.copy()
     years = df.columns.tolist()
     last_year = years[-1]
-
+    
     total_assets_last_year = encontrar_cuenta(df, ["ACTIVOS TOTALES"])[last_year]
-
+    
     if total_assets_last_year != 0:
         df[f'AV_%_{last_year}'] = (df[last_year] / total_assets_last_year)
     else:
         df[f'AV_%_{last_year}'] = 0
-
+            
     base_year = None
     activos_totales_row = encontrar_cuenta(df, ["ACTIVOS TOTALES"])
-
+    
     if len(years) > 0 and activos_totales_row.get(years[0], 0) > 0:
         base_year = years[0]
     elif len(years) > 1 and activos_totales_row.get(years[1], 0) > 0:
@@ -103,7 +95,7 @@ def procesar_balance(df_balance):
     else:
         df['Var_$'] = 0
         df['Var_%'] = 0
-
+        
     return df
 
 def procesar_pyg(df_pyg):
@@ -117,15 +109,15 @@ def procesar_pyg(df_pyg):
     ebitda = encontrar_cuenta(df_pyg, ["EBITDA"])
     resultado_op = encontrar_cuenta(df_pyg, ["RESULTADO OPERATIVO"])
     resultado_neto = encontrar_cuenta(df_pyg, ["RESULTADO DEL EJERCICIO", "Utilidad Neta"])
-
+    
     indicadores = pd.DataFrame(columns=years, index=[
         "Crecimiento en Ventas", "Costo de Ventas / Ventas", "Margen Bruto",
         "Crecimiento Gastos Admin.", "Crecimiento Gastos Comerc.", "Gastos Operativos Totales / Ventas",
         "Margen EBITDA", "Margen Operativo", "Margen Neto"
     ])
-
+    
     gastos_op_totales = gastos_admin + gastos_comerc + depreciacion
-
+    
     for i, year in enumerate(years):
         if i > 0:
             prev_year = years[i-1]
@@ -135,7 +127,7 @@ def procesar_pyg(df_pyg):
                 indicadores.loc["Crecimiento Gastos Admin.", year] = (gastos_admin[year] / gastos_admin[prev_year] - 1)
             if gastos_comerc.get(prev_year, 0) != 0: 
                 indicadores.loc["Crecimiento Gastos Comerc.", year] = (gastos_comerc[year] / gastos_comerc[prev_year] - 1)
-
+        
         if ventas.get(year, 0) != 0:
             indicadores.loc["Costo de Ventas / Ventas", year] = costo_ventas[year] / ventas[year]
             indicadores.loc["Margen Bruto", year] = resultado_bruto[year] / ventas[year]
@@ -143,12 +135,12 @@ def procesar_pyg(df_pyg):
             indicadores.loc["Margen EBITDA", year] = ebitda[year] / ventas[year]
             indicadores.loc["Margen Operativo", year] = resultado_op[year] / ventas[year]
             indicadores.loc["Margen Neto", year] = resultado_neto[year] / ventas[year]
-
+            
     return indicadores.astype(float).fillna(0)
 
 def calcular_ratios(df_balance, df_pyg):
     years = df_balance.columns.tolist()
-
+    
     activo_cte = encontrar_cuenta(df_balance, ['Activo Corriente'])
     pasivo_cte = encontrar_cuenta(df_balance, ['Pasivo Corriente'])
     inventario = encontrar_cuenta(df_balance, ['Inventario', 'Existencias'])
@@ -158,38 +150,38 @@ def calcular_ratios(df_balance, df_pyg):
     activos_totales = encontrar_cuenta(df_balance, ['ACTIVOS TOTALES'])
     pasivos_totales = encontrar_cuenta(df_balance, ['PASIVOS TOTALES'])
     patrimonio = encontrar_cuenta(df_balance, ['PATRIMONIO TOTAL'])
-
+    
     ventas = encontrar_cuenta(df_pyg, ['Ingresos por ventas'])
     costo = encontrar_cuenta(df_pyg, ['Costo de explotación', 'Costo de ventas'], hacer_abs=True)
     resultado_bruto = encontrar_cuenta(df_pyg, ["RESULTADO BRUTO"]) 
     resultado_ejercicio = encontrar_cuenta(df_pyg, ["RESULTADO DEL EJERCICIO", "Utilidad Neta"])
     ebitda = encontrar_cuenta(df_pyg, ["EBITDA"])
     resultado_op = encontrar_cuenta(df_pyg, ["RESULTADO OPERATIVO"])
-
+    
     ratios = pd.DataFrame(columns=years)
-
+    
     for year in years:
         ratios.loc['Liquidez Corriente', year] = activo_cte[year] / pasivo_cte[year] if pasivo_cte[year] else 0
         ratios.loc['Prueba Ácida', year] = (activo_cte[year] - inventario[year]) / pasivo_cte[year] if pasivo_cte[year] else 0
         ratios.loc['Liquidez Inmediata', year] = caja[year] / pasivo_cte[year] if pasivo_cte[year] else 0
-
+        
         ratios.loc['Rotación CxC (días)', year] = cxc[year] / (ventas[year] / 365) if ventas[year] else 0
         ratios.loc['Rotación Inventario (días)', year] = inventario[year] / (costo[year] / 365) if costo[year] else 0
         ratios.loc['Rotación CxP (días)', year] = cxp[year] / (costo[year] / 365) if costo[year] else 0
         ratios.loc['Rotación de Activos', year] = ventas[year] / activos_totales[year] if activos_totales[year] else 0
-
+        
         ratios.loc['Endeudamiento', year] = pasivos_totales[year] / activos_totales[year] if activos_totales[year] else 0
         ratios.loc['Multiplicador de Capital', year] = activos_totales[year] / patrimonio[year] if patrimonio[year] else 0
         ratios.loc['Razón Deuda/Capital', year] = pasivos_totales[year] / patrimonio[year] if patrimonio[year] else 0
-
+        
         ratios.loc['ROA', year] = resultado_ejercicio[year] / activos_totales[year] if activos_totales[year] else 0
         ratios.loc['ROE', year] = resultado_ejercicio[year] / patrimonio[year] if patrimonio[year] else 0
-
+        
         ratios.loc['Margen Bruto', year] = resultado_bruto[year] / ventas[year] if ventas[year] else 0
         ratios.loc['Margen EBITDA', year] = ebitda[year] / ventas[year] if ventas[year] else 0
         ratios.loc['Margen Operativo', year] = resultado_op[year] / ventas[year] if ventas[year] else 0
         ratios.loc['Margen Neto', year] = resultado_ejercicio[year] / ventas[year] if ventas[year] else 0
-
+        
     return ratios.astype(float).fillna(0)
 
 def to_excel(df_balance, df_pyg, df_indicadores, df_ratios):
@@ -203,12 +195,12 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios):
 
 def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     st.header("Dashboard Gráfico Interactivo")
-
+    
     # --- CONFIGURACIÓN DE TAMAÑO DE FUENTES ---
     F_DATA = 16  
     F_AXIS = 18  
     F_LEG = 16   
-
+    
     # --- PREPARACIÓN DE DATOS ---
     years_list = [str(c) for c in df_ratios.columns.tolist()]
     last_year = years_list[-1]
@@ -216,7 +208,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
 
     df_ratios = df_ratios.apply(pd.to_numeric, errors='coerce').fillna(0)
     df_indicadores = df_indicadores.apply(pd.to_numeric, errors='coerce').fillna(0)
-
+    
     c_blue_dark = CORPORATE_COLORS[0]
     c_blue_light = CORPORATE_COLORS[1]
     c_yellow = CORPORATE_COLORS[2]
@@ -239,7 +231,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
 
     # --- FILA 1 ---
     col1, _, col2 = st.columns([1, 0.1, 1])
-
+    
     with col1:
         st.subheader(f"Estructura Patrimonial ({last_year})")
         act_cte = float(encontrar_cuenta(df_balance, ['Activo Corriente'])[orig_last_year])
@@ -247,20 +239,20 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         pas_cte = float(encontrar_cuenta(df_balance, ['Pasivo Corriente'])[orig_last_year])
         pas_no_cte = float(encontrar_cuenta(df_balance, ['Pasivo No Corriente'])[orig_last_year])
         patrimonio = float(encontrar_cuenta(df_balance, ['PATRIMONIO TOTAL'])[orig_last_year])
-
+        
         fig = go.Figure()
         # Columna Activos
         fig.add_trace(go.Bar(name='Activo No Corriente', x=['Activos'], y=[act_no_cte], marker_color=c_blue_dark, text=f"{act_no_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
         fig.add_trace(go.Bar(name='Activo Corriente', x=['Activos'], y=[act_cte], marker_color=c_blue_light, text=f"{act_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
-
+        
         # Columna Pasivos
         fig.add_trace(go.Bar(name='Patrimonio', x=['Pasivo y Patrimonio'], y=[patrimonio], marker_color=c_brown, text=f"{patrimonio/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
         fig.add_trace(go.Bar(name='Pasivo No Corriente', x=['Pasivo y Patrimonio'], y=[pas_no_cte], marker_color=c_ochre, text=f"{pas_no_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
         fig.add_trace(go.Bar(name='Pasivo Corriente', x=['Pasivo y Patrimonio'], y=[pas_cte], marker_color=c_yellow, text=f"{pas_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
-
-        # CORRECCIÓN DE APILADO: Aplicamos el layout MANUALMENTE y NO llamamos a update_fig_layout
+        
+        # CORRECCIÓN DE APILADO
         fig.update_layout(
-            barmode='stack', # ESTO ASEGURA QUE SE APILE
+            barmode='stack', 
             yaxis_title='Valor', 
             legend=dict(font=dict(size=F_LEG), orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), 
             font=dict(size=14, color="black"),
@@ -282,7 +274,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         v_gastos_op = v_g_admin + v_g_comerc + v_depre
         v_gastos_fin = float(encontrar_cuenta(df_pyg, ['Gastos financieros'], hacer_abs=True)[orig_last_year])
         v_impuestos = float(encontrar_cuenta(df_pyg, ["Impuesto a la renta"], hacer_abs=True)[orig_last_year])
-
+        
         fig = go.Figure(go.Waterfall(
             orientation = "v", measure = ["absolute", "relative", "relative", "total", "relative", "relative", "total"],
             x = ["Ventas", "Costo", "Gastos Op.", "Res. Operativo", "Gastos Fin.", "Impuestos", "Utilidad Neta"],
@@ -301,7 +293,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         st.subheader("Evolución de Ventas (Histórico)")
         ventas_series = encontrar_cuenta(df_pyg, ['Ingresos por ventas'])
         ventas_vals = pd.to_numeric(ventas_series, errors='coerce').fillna(0).tolist()
-
+        
         fig = go.Figure()
         fig.add_trace(go.Bar(x=years_list, y=ventas_vals, text=[f"{v/1e6:.1f}M" for v in ventas_vals], textposition='auto', marker_color=c_blue_dark, textfont=dict(size=F_DATA)))
         update_fig_layout(fig)
@@ -311,15 +303,15 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         list_act_cte = encontrar_cuenta(df_balance, ['Activo Corriente']).astype(float).tolist()
         list_pas_cte = encontrar_cuenta(df_balance, ['Pasivo Corriente']).astype(float).tolist()
         list_neto = [(a - p) for a, p in zip(list_act_cte, list_pas_cte)]
-
+        
         fig = go.Figure()
         fig.add_trace(go.Bar(name='Activo Corriente', x=years_list, y=list_act_cte, marker_color=c_blue_light, text=[f"{v/1e6:.1f}M" for v in list_act_cte], textposition='auto', textfont=dict(size=F_DATA)))
         fig.add_trace(go.Bar(name='Pasivo Corriente', x=years_list, y=list_pas_cte, marker_color=c_yellow, text=[f"{v/1e6:.1f}M" for v in list_pas_cte], textposition='auto', textfont=dict(size=F_DATA)))
         fig.add_trace(go.Scatter(name='Capital de Trabajo Neto', x=years_list, y=list_neto, mode='lines+markers+text', text=[f"{v/1e6:.1f}M" for v in list_neto], textposition="top center", line=dict(color='green', width=3, dash='dot'), marker=dict(size=10, color='green'), textfont=dict(size=F_DATA)))
         update_fig_layout(fig)
-
+    
     st.divider()
-
+    
     # --- FILA 3 ---
     st.subheader("Evolución de Grandes Grupos del Balance")
     categories = ['Activo Corriente', 'Activo No Corriente', 'Pasivo Corriente', 'Pasivo No Corriente', 'Patrimonio']
@@ -338,7 +330,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
 
     # --- FILA 4: RATIOS ---
     col5, _, col6 = st.columns([1, 0.1, 1])
-
+    
     with col5:
         st.subheader("Tendencias de Liquidez")
         liq_corr = df_ratios.loc['Liquidez Corriente'].values.tolist()
@@ -347,7 +339,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         fig.add_trace(go.Scatter(x=years_list, y=liq_corr, name='Liquidez Corriente', mode='lines+markers+text', text=[f"{v:.2f}" for v in liq_corr], textposition="top center", line=dict(color=c_blue_dark), textfont=dict(size=F_DATA)))
         fig.add_trace(go.Scatter(x=years_list, y=pru_acid, name='Prueba Ácida', mode='lines+markers+text', text=[f"{v:.2f}" for v in pru_acid], textposition="top center", line=dict(color=c_blue_light), textfont=dict(size=F_DATA)))
         update_fig_layout(fig)
-
+        
     with col6:
         st.subheader("Tendencias de Rendimiento (ROE y ROA)")
         roe = df_ratios.loc['ROE'].values.tolist()
@@ -357,7 +349,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         fig.add_trace(go.Scatter(x=years_list, y=roa, name='ROA', mode='lines+markers+text', text=[f"{v:.1%}" for v in roa], textposition="top center", line=dict(color='gray'), textfont=dict(size=F_DATA)))
         fig.update_layout(yaxis_tickformat=".2%")
         update_fig_layout(fig)
-
+        
     col7, _, col8 = st.columns([1, 0.1, 1])
     with col7:
         st.subheader("Tendencias de Rentabilidad (Márgenes)")
@@ -370,7 +362,7 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         fig.add_trace(go.Scatter(x=years_list, y=m_neto, name='Margen Neto', mode='lines+markers+text', text=[f"{v:.0%}" for v in m_neto], textposition="top center", line=dict(color=c_ochre), textfont=dict(size=F_DATA)))
         fig.update_layout(yaxis_tickformat=".2%")
         update_fig_layout(fig)
-
+        
     with col8:
         st.subheader("Indicadores de Actividad (Días)")
         rot_cxc = df_ratios.loc['Rotación CxC (días)'].values.tolist()
@@ -386,9 +378,9 @@ def generar_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
 with st.sidebar:
     st.header("📂 Carga de Datos")
     uploaded_file = st.file_uploader("Sube tu archivo Excel (.xlsx)", type="xlsx")
-
+    
     st.divider()
-
+    
     # --- LÓGICA DE DESCARGA DE PLANTILLA ---
     template_filename = "plantilla.xlsx"
     if os.path.exists(template_filename):
@@ -399,10 +391,15 @@ with st.sidebar:
                 file_name="Plantilla_Analisis_Financiero.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-        # Mensaje profesional para el cliente
-        st.info("ℹ️ Instrucciones: Descargue este formato, complete sus datos financieros y suba el archivo arriba para generar el reporte.")
+        # --- MENSAJE DE ADVERTENCIA MEJORADO ---
+        st.error("⚠️ IMPORTANTE: Esta App NO funciona con cualquier Excel. Debes descargar la plantilla de arriba, llenarla con tus datos y subirla.")
     else:
         st.warning(f"⚠️ Sube tu Excel bueno a Replit y renómbralo a '{template_filename}' para habilitar la descarga.")
+    
+    # --- BOTÓN DE LLAMADA A LA ACCIÓN (NUEVO) ---
+    st.divider()
+    # REEMPLAZA LA URL DE ABAJO POR TU ENLACE REAL
+    st.link_button("🎓 Ver mis Cursos y Servicios", https://bento.me/oscar-menacho-consultor-financiero) 
 
 if uploaded_file is not None:
     try:
@@ -412,7 +409,7 @@ if uploaded_file is not None:
         nombre_pyg = encontrar_nombre_pestana(nombres_pestanas, 'resultado')
 
         if not nombre_balance or not nombre_pyg:
-            st.error("Error: Faltan pestañas clave en el Excel.")
+            st.error("Error: El archivo no tiene el formato correcto. Por favor usa la plantilla.")
             st.stop()
 
         df_balance_orig = pd.read_excel(xls, sheet_name=nombre_balance, header=1, index_col=0).dropna(how='all').dropna(how='all', axis=1)
@@ -424,7 +421,7 @@ if uploaded_file is not None:
             df.index.name = 'Cuenta'
             for col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
             df.fillna(0, inplace=True)
-
+        
         df_balance_analizado = procesar_balance(df_balance_orig)
         df_indicadores_pyg = procesar_pyg(df_pyg_orig)
         df_ratios = calcular_ratios(df_balance_orig, df_pyg_orig)
@@ -460,9 +457,9 @@ if uploaded_file is not None:
             st.dataframe(df_ratios_display, use_container_width=True)
         with tab4:
             generar_dashboard(df_balance_orig, df_pyg_orig, df_indicadores_pyg, df_ratios)
-
+        
         excel_data = to_excel(df_balance_analizado, df_pyg_orig, df_indicadores_pyg, df_ratios)
-
+        
         st.sidebar.divider()
         st.sidebar.download_button(
             label="📥 Descargar Reporte Completo",
@@ -474,4 +471,5 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Error técnico: {e}")
 else:
-    st.info("👈 Sube tu archivo Excel en el panel lateral o descarga la plantilla para comenzar.")
+    # --- MENSAJE INICIAL SI NO HAY ARCHIVO CARGADO ---
+    st.info("👋 ¡Hola! Para usar esta App, primero descarga la plantilla del menú izquierdo, complétala y súbela.")
