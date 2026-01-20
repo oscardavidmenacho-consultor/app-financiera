@@ -189,8 +189,9 @@ def calcular_ratios(df_balance, df_pyg):
 # --- CREAR FIGURAS ---
 def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     F_DATA = 16  
-    F_AXIS = 18  
-    F_LEG = 16   
+    F_AXIS = 16  
+    F_LEG = 14
+    F_TITLE = 20 # Aumentado
     
     years_list = [str(c) for c in df_ratios.columns.tolist()]
     last_year = years_list[-1]
@@ -204,12 +205,14 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     c_ochre = CORPORATE_COLORS[5]
     c_brown = CORPORATE_COLORS[3]
 
-    def apply_style(fig):
+    def apply_style(fig, title_text):
         fig.update_layout(
+            title=dict(text=title_text, font=dict(size=F_TITLE)),
             barmode='group',
             legend=dict(font=dict(size=F_LEG), orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             font=dict(size=14, color="black"), 
-            margin=dict(l=20, r=20, t=50, b=20),
+            # MARGENES AUMENTADOS PARA EVITAR CORTES Y SUPERPOSICION
+            margin=dict(l=60, r=20, t=80, b=40),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
@@ -233,8 +236,8 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig1.add_trace(go.Bar(name='Pasivo No Corriente', x=['Pasivo y Patrimonio'], y=[pas_no_cte], marker_color=c_ochre, text=f"{pas_no_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
     fig1.add_trace(go.Bar(name='Pasivo Corriente', x=['Pasivo y Patrimonio'], y=[pas_cte], marker_color=c_yellow, text=f"{pas_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
     
-    fig1 = apply_style(fig1)
-    fig1.update_layout(barmode='stack', title=f"Estructura Patrimonial ({last_year})")
+    fig1 = apply_style(fig1, f"Estructura Patrimonial ({last_year})")
+    fig1.update_layout(barmode='stack')
     figs['Estructura'] = fig1
 
     # 2. Cascada
@@ -255,8 +258,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         connector = {"line":{"color":"rgb(63, 63, 63)"}},
         textposition='auto', textfont=dict(size=F_DATA)
     ))
-    fig2 = apply_style(fig2)
-    fig2.update_layout(title=f"Cascada de Resultados ({last_year})")
+    fig2 = apply_style(fig2, f"Cascada de Resultados ({last_year})")
     figs['Cascada'] = fig2
 
     # 3. Ventas Históricas
@@ -264,8 +266,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     ventas_vals = pd.to_numeric(ventas_series, errors='coerce').fillna(0).tolist()
     fig3 = go.Figure()
     fig3.add_trace(go.Bar(x=years_list, y=ventas_vals, text=[f"{v/1e6:.1f}M" for v in ventas_vals], textposition='auto', marker_color=c_blue_dark, textfont=dict(size=F_DATA)))
-    fig3 = apply_style(fig3)
-    fig3.update_layout(title="Evolución de Ventas")
+    fig3 = apply_style(fig3, "Evolución de Ventas")
     figs['Ventas'] = fig3
 
     # 4. Capital de Trabajo
@@ -276,8 +277,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4.add_trace(go.Bar(name='Activo Corriente', x=years_list, y=list_act_cte, marker_color=c_blue_light, text=[f"{v/1e6:.1f}M" for v in list_act_cte], textposition='auto', textfont=dict(size=F_DATA)))
     fig4.add_trace(go.Bar(name='Pasivo Corriente', x=years_list, y=list_pas_cte, marker_color=c_yellow, text=[f"{v/1e6:.1f}M" for v in list_pas_cte], textposition='auto', textfont=dict(size=F_DATA)))
     fig4.add_trace(go.Scatter(name='Capital de Trabajo Neto', x=years_list, y=list_neto, mode='lines+markers+text', text=[f"{v/1e6:.1f}M" for v in list_neto], textposition="top center", line=dict(color='green', width=3, dash='dot'), marker=dict(size=10, color='green'), textfont=dict(size=F_DATA)))
-    fig4 = apply_style(fig4)
-    fig4.update_layout(title="Capital de Trabajo")
+    fig4 = apply_style(fig4, "Capital de Trabajo")
     figs['CapitalTrabajo'] = fig4
 
     # 5. Liquidez
@@ -286,8 +286,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig5 = go.Figure()
     fig5.add_trace(go.Scatter(x=years_list, y=liq_corr, name='Liquidez Corriente', mode='lines+markers+text', text=[f"{v:.2f}" for v in liq_corr], textposition="top center", line=dict(color=c_blue_dark), textfont=dict(size=F_DATA)))
     fig5.add_trace(go.Scatter(x=years_list, y=pru_acid, name='Prueba Ácida', mode='lines+markers+text', text=[f"{v:.2f}" for v in pru_acid], textposition="top center", line=dict(color=c_blue_light), textfont=dict(size=F_DATA)))
-    fig5 = apply_style(fig5)
-    fig5.update_layout(title="Liquidez")
+    fig5 = apply_style(fig5, "Liquidez")
     figs['Liquidez'] = fig5
 
     # 6. Rentabilidad
@@ -296,8 +295,8 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig6 = go.Figure()
     fig6.add_trace(go.Scatter(x=years_list, y=roe, name='ROE', mode='lines+markers+text', text=[f"{v:.1%}" for v in roe], textposition="top center", line=dict(color=c_ochre), textfont=dict(size=F_DATA)))
     fig6.add_trace(go.Scatter(x=years_list, y=roa, name='ROA', mode='lines+markers+text', text=[f"{v:.1%}" for v in roa], textposition="top center", line=dict(color='gray'), textfont=dict(size=F_DATA)))
-    fig6.update_layout(yaxis_tickformat=".2%", title="Rentabilidad (ROE/ROA)")
-    fig6 = apply_style(fig6)
+    fig6 = apply_style(fig6, "Rentabilidad (ROE/ROA)")
+    fig6.update_layout(yaxis_tickformat=".2%")
     figs['Rentabilidad'] = fig6
 
     # 7. Margenes
@@ -308,8 +307,8 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig7.add_trace(go.Scatter(x=years_list, y=m_bruto, name='Margen Bruto', mode='lines+markers+text', text=[f"{v:.0%}" for v in m_bruto], textposition="top center", line=dict(color=c_blue_dark), textfont=dict(size=F_DATA)))
     fig7.add_trace(go.Scatter(x=years_list, y=m_oper, name='Margen Operativo', mode='lines+markers+text', text=[f"{v:.0%}" for v in m_oper], textposition="top center", line=dict(color=c_blue_light), textfont=dict(size=F_DATA)))
     fig7.add_trace(go.Scatter(x=years_list, y=m_neto, name='Margen Neto', mode='lines+markers+text', text=[f"{v:.0%}" for v in m_neto], textposition="top center", line=dict(color=c_ochre), textfont=dict(size=F_DATA)))
-    fig7.update_layout(yaxis_tickformat=".2%", title="Márgenes")
-    fig7 = apply_style(fig7)
+    fig7 = apply_style(fig7, "Márgenes")
+    fig7.update_layout(yaxis_tickformat=".2%")
     figs['Margenes'] = fig7
 
     # 8. Actividad
@@ -320,8 +319,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig8.add_trace(go.Bar(x=years_list, y=rot_cxc, name='Rotación CxC', marker_color=c_blue_dark, text=[f"{v:.0f}" for v in rot_cxc], textposition='auto', textfont=dict(size=F_DATA)))
     fig8.add_trace(go.Bar(x=years_list, y=rot_inv, name='Rotación Inv.', marker_color=c_blue_light, text=[f"{v:.0f}" for v in rot_inv], textposition='auto', textfont=dict(size=F_DATA)))
     fig8.add_trace(go.Bar(x=years_list, y=rot_cxp, name='Rotación CxP', marker_color=c_ochre, text=[f"{v:.0f}" for v in rot_cxp], textposition='auto', textfont=dict(size=F_DATA)))
-    fig8.update_layout(title="Ciclo de Efectivo (Días)")
-    fig8 = apply_style(fig8)
+    fig8 = apply_style(fig8, "Indicadores de Actividad")
     figs['Actividad'] = fig8
     
     return figs
@@ -338,15 +336,17 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         })
         num_format = workbook.add_format({'num_format': '#,##0', 'border': 1})
         pct_format = workbook.add_format({'num_format': '0.0%', 'border': 1})
+        # Corrección alineación izquierda
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
         
+        # Definición de hojas
         sheets = {
             'Balance_Analizado': df_balance,
-            'Resultados_P&G': df_pyg,
-            'Indicadores_P&G': df_indicadores,
+            # 'Resultados_e_Indicadores' se manejará manualmente abajo para unir tablas
             'Ratios_Financieros': df_ratios
         }
 
+        # 1. Escribir Balance y Ratios
         for sheet_name, df in sheets.items():
             df.to_excel(writer, sheet_name=sheet_name, startrow=1, header=False)
             worksheet = writer.sheets[sheet_name]
@@ -360,14 +360,50 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
             for i, col in enumerate(df.columns):
                 col_idx = i + 1 
                 col_name = str(col).lower()
-                
                 if any(x in col_name for x in ['%', 'margen', 'roa', 'roe', 'crecimiento', 'var_%']):
                     worksheet.set_column(col_idx, col_idx, 15, pct_format)
                 elif 'días' in col_name or 'dias' in col_name:
                      worksheet.set_column(col_idx, col_idx, 15, num_format)
                 else:
                     worksheet.set_column(col_idx, col_idx, 18, num_format)
+
+        # 2. Escribir Resultados e Indicadores en LA MISMA HOJA
+        sheet_pyg = 'Resultados_e_Indicadores'
+        worksheet_pyg = workbook.add_worksheet(sheet_pyg)
+        writer.sheets[sheet_pyg] = worksheet_pyg
         
+        # Tabla 1: Estado de Resultados Original
+        start_row = 0
+        worksheet_pyg.write(start_row, 0, "ESTADO DE RESULTADOS", header_format)
+        
+        # Encabezados
+        worksheet_pyg.write(start_row + 1, 0, "Cuenta", header_format)
+        for col_num, value in enumerate(df_pyg.columns.values):
+            worksheet_pyg.write(start_row + 1, col_num + 1, value, header_format)
+        
+        # Datos
+        for row_num, (index, row) in enumerate(df_pyg.iterrows()):
+            worksheet_pyg.write(start_row + 2 + row_num, 0, index, text_format)
+            for col_num, value in enumerate(row):
+                worksheet_pyg.write(start_row + 2 + row_num, col_num + 1, value, num_format)
+        
+        # Tabla 2: Indicadores (Debajo de la anterior)
+        start_row_ind = start_row + len(df_pyg) + 5
+        worksheet_pyg.write(start_row_ind, 0, "INDICADORES P&G", header_format)
+        
+        worksheet_pyg.write(start_row_ind + 1, 0, "Indicador", header_format)
+        for col_num, value in enumerate(df_indicadores.columns.values):
+            worksheet_pyg.write(start_row_ind + 1, col_num + 1, value, header_format)
+            
+        for row_num, (index, row) in enumerate(df_indicadores.iterrows()):
+            worksheet_pyg.write(start_row_ind + 2 + row_num, 0, index, text_format)
+            for col_num, value in enumerate(row):
+                worksheet_pyg.write(start_row_ind + 2 + row_num, col_num + 1, value, pct_format)
+                
+        worksheet_pyg.set_column('A:A', 40, text_format)
+        worksheet_pyg.set_column('B:Z', 18)
+
+        # 3. Hoja de Gráficos
         worksheet_g = workbook.add_worksheet("DASHBOARD_GRAFICO")
         worksheet_g.hide_gridlines(2)
         worksheet_g.write(0, 0, "DASHBOARD EJECUTIVO - GRÁFICOS", header_format)
@@ -397,7 +433,7 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN CTA PERSONALIZADO (GRANDE Y NARANJA) ---
+    # --- BOTÓN CTA PERSONALIZADO ---
     st.markdown("""
     <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn">
         <div style="
@@ -447,9 +483,38 @@ if uploaded_file is not None:
 
         tab1, tab2, tab3, tab4 = st.tabs(["📊 Balance", "📈 P&G", "🔢 Ratios", "🖼️ DASHBOARD"])
 
-        with tab1: st.dataframe(df_bal_an.style.format("{:,.0f}"))
-        with tab2: st.dataframe(df_ind_pyg.style.format("{:.2%}"))
-        with tab3: st.dataframe(df_ratios)
+        with tab1:
+            st.header("Análisis del Balance General")
+            # Corrección de formato: % para columnas de análisis vertical y variación
+            format_dict = {col: '{:,.0f}' for col in df_bal.columns}
+            format_dict.update({col: '{:.2%}' for col in df_bal_an.columns if '%' in col})
+            format_dict.update({col: '{:,.0f}' for col in df_bal_an.columns if '$' in col})
+            st.dataframe(df_bal_an.style.format(format_dict, na_rep="-"), use_container_width=True)
+            
+        with tab2:
+            st.header("Análisis del Estado de Resultados (P&G)")
+            st.subheader("Estado de Resultados Original")
+            st.dataframe(df_pyg_orig.style.format("{:,.0f}"), use_container_width=True) # SE HA RESTAURADO ESTA TABLA
+            st.divider()
+            st.subheader("Indicadores P&G")
+            st.dataframe(df_ind_pyg.style.format("{:.2%}"), use_container_width=True)
+            
+        with tab3:
+            st.header("Ratios Financieros Clave")
+            df_ratios_display = df_ratios.copy()
+            # Corrección de formato detallado en Ratios
+            for idx in df_ratios_display.index:
+                if 'días' in idx: 
+                    # Enteros para Días
+                    df_ratios_display.loc[idx] = df_ratios_display.loc[idx].apply(lambda x: f"{x:,.0f}" if pd.notna(x) else "-")
+                elif any(kw in idx for kw in ['ROA', 'ROE', 'Margen']): 
+                    # Porcentajes para rentabilidad
+                    df_ratios_display.loc[idx] = df_ratios_display.loc[idx].apply(lambda x: f"{x:.2%}" if pd.notna(x) else "-")
+                else: 
+                    # 2 decimales para el resto (Liquidez, endeudamiento, etc)
+                    df_ratios_display.loc[idx] = df_ratios_display.loc[idx].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "-")
+            st.dataframe(df_ratios_display, use_container_width=True)
+            
         with tab4:
             st.header("Dashboard Gráfico Interactivo")
             col1, _, col2 = st.columns([1, 0.1, 1])
