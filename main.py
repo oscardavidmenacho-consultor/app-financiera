@@ -399,7 +399,7 @@ with st.sidebar:
     # --- BOTÓN DE LLAMADA A LA ACCIÓN (NUEVO) ---
     st.divider()
     # REEMPLAZA LA URL DE ABAJO POR TU ENLACE REAL
-    st.link_button("🎓 Ver mis Cursos y Servicios", https://bento.me/oscar-menacho-consultor-financiero) 
+    st.link_button("🎓 Ver mis Cursos y Servicios", "https://bento.me/oscar-menacho-consultor-financiero") 
 
 if uploaded_file is not None:
     try:
