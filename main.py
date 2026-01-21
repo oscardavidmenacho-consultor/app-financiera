@@ -14,7 +14,7 @@ st.markdown("""
 <style>
     /* Aumentar fuente de pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 600;
     }
     /* Fondo general */
@@ -32,21 +32,25 @@ st.markdown("""
     .stDataFrame {
         font-size: 1.2rem !important;
     }
+    /* Header de tablas (Intentar forzar estilo nativo) */
+    div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
+        background-color: #004c70;
+        color: white;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (BANNER MÁS GRANDE) ---
-# Antes era [2.5, 1], ahora damos más espacio a la imagen o la centramos mejor
+# --- LAYOUT DE CABECERA ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
     st.title("Análisis de Estados Financieros")
+    # CAMBIO SOLICITADO: TEXTO DE SUBTÍTULO
     st.markdown("### Oscar Menacho | Consultor y Docente Financiero")
 
 with col_ban2:
     banner_file = "banner.jpg"
     if os.path.exists(banner_file):
-        # use_container_width=True hace que ocupe todo el ancho de su columna
         st.image(banner_file, use_container_width=True) 
     else:
         st.warning(f"⚠️ Falta 'banner.jpg'")
@@ -55,47 +59,46 @@ st.divider()
 
 CORPORATE_COLORS = ['#004c70', '#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4']
 
-# --- FUNCIONES DE FORMATO VISUAL (LATINO/EUROPEO) ---
+# --- FUNCIONES DE FORMATO VISUAL ---
 def formato_latino(valor, es_porcentaje=False, decimales=0):
     """Convierte números a formato 1.000,00 (Punto mil, Coma decimal)"""
     if pd.isna(valor) or valor == 0:
         return "-"
     
     if es_porcentaje:
-        # Formato %: 0.15 -> 15,0%
         return f"{valor * 100:,.{decimales}f}%".replace(".", "X").replace(",", ".").replace("X", ",")
     else:
-        # Formato $: 1200.5 -> 1.200,5
         return f"{valor:,.{decimales}f}".replace(".", "X").replace(",", ".").replace("X", ",")
 
 def aplicar_estilos_df(df, tipo='balance'):
     """Aplica colores a encabezados y formato visual a los datos"""
-    # Creamos una copia formato texto para visualización
     df_visual = df.copy()
     
-    # Lógica de formateo celda por celda (para visualización)
     for col in df_visual.columns:
         col_lower = str(col).lower()
-        # Detectar porcentajes
         if any(x in col_lower for x in ['%', 'margen', 'roa', 'roe', 'crecimiento', 'var_%', 'av_']):
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
-        # Detectar días (enteros)
         elif 'días' in col_lower or 'dias' in col_lower:
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
-        # Detectar ratios con decimales (Liquidez, etc)
         elif tipo == 'ratios' and not any(x in col_lower for x in ['días', '%']):
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=2))
-        # El resto (Dinero) -> Enteros con separador de miles
         else:
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
-    # Estilizado de Pandas (Headers Azules)
-    # Nota: Streamlit tiene soporte limitado para esto, pero intentamos resaltar headers
+    # Estilizado de Pandas (Headers Azules y Fuente Grande)
     styler = df_visual.style.set_properties(**{
-        'font-size': '16px', # Aumentar fuente
-        'text-align': 'center'
+        'font-size': '18px', # Fuente aumentada
+        'text-align': 'center',
+        'border-color': 'lightgray'
     }).set_table_styles([
-        {'selector': 'th', 'props': [('background-color', '#004c70'), ('color', 'white'), ('font-size', '16px')]}
+        # CAMBIO SOLICITADO: Relleno Azul en Encabezados
+        {'selector': 'th', 'props': [
+            ('background-color', '#004c70'), 
+            ('color', 'white'), 
+            ('font-size', '18px'),
+            ('font-weight', 'bold'),
+            ('text-align', 'center')
+        ]}
     ])
     
     return styler
@@ -238,13 +241,12 @@ def calcular_ratios(df_balance, df_pyg):
         
     return ratios.astype(float).fillna(0)
 
-# --- CREAR FIGURAS DASHBOARD (MEJORADO) ---
+# --- CREAR FIGURAS DASHBOARD ---
 def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
-    # AUMENTO DE FUENTES
     F_DATA = 16  
     F_AXIS = 16  
     F_LEG = 14
-    F_TITLE = 22 # Mucho más grande
+    F_TITLE = 22 
     
     years_list = [str(c) for c in df_ratios.columns.tolist()]
     last_year = years_list[-1]
@@ -259,17 +261,15 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     c_brown = CORPORATE_COLORS[3]
 
     def apply_style(fig, title_text, max_y_val=None):
-        # Configurar rango eje Y (Aire arriba)
         if max_y_val and max_y_val > 0:
-            fig.update_yaxes(range=[0, max_y_val * 1.15]) # 15% más de aire
+            fig.update_yaxes(range=[0, max_y_val * 1.15]) 
             
         fig.update_layout(
             title=dict(text=title_text, font=dict(size=F_TITLE)),
             barmode='group',
-            # LEYENDA A LA DERECHA
             legend=dict(font=dict(size=F_LEG), orientation="v", yanchor="top", y=1, xanchor="left", x=1.02),
             font=dict(size=14, color="black"), 
-            margin=dict(l=50, r=20, t=80, b=40), # Margen izquierdo ajustado
+            margin=dict(l=50, r=20, t=80, b=40),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
@@ -279,14 +279,13 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
 
     figs = {}
 
-    # 1. Estructura Patrimonial (Balance)
+    # 1. Estructura Patrimonial
     act_cte = float(encontrar_cuenta(df_balance, ['Activo Corriente'])[orig_last_year])
     act_no_cte = float(encontrar_cuenta(df_balance, ['Activo No Corriente'])[orig_last_year])
     pas_cte = float(encontrar_cuenta(df_balance, ['Pasivo Corriente'])[orig_last_year])
     pas_no_cte = float(encontrar_cuenta(df_balance, ['Pasivo No Corriente'])[orig_last_year])
     patrimonio = float(encontrar_cuenta(df_balance, ['PATRIMONIO TOTAL'])[orig_last_year])
-    
-    max_val_est = max(act_cte + act_no_cte, pas_cte + pas_no_cte + patrimonio) # Altura de la pila
+    max_val_est = max(act_cte + act_no_cte, pas_cte + pas_no_cte + patrimonio) 
 
     fig1 = go.Figure()
     fig1.add_trace(go.Bar(name='Activo No Corriente', x=['Activos'], y=[act_no_cte], marker_color=c_blue_dark, text=f"{act_no_cte/1e6:.1f}M", textposition='auto', textfont=dict(size=F_DATA)))
@@ -299,7 +298,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig1.update_layout(barmode='stack')
     figs['Estructura'] = fig1
 
-    # 2. Cascada de Resultados
+    # 2. Cascada
     v_ventas = float(encontrar_cuenta(df_pyg, ['Ingresos por ventas'])[orig_last_year])
     v_costo = float(encontrar_cuenta(df_pyg, ['Costo de explotación', 'Costo de ventas'], hacer_abs=True)[orig_last_year])
     v_g_admin = float(encontrar_cuenta(df_pyg, ['Gastos administrativos'], hacer_abs=True)[orig_last_year])
@@ -309,7 +308,6 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     v_gastos_fin = float(encontrar_cuenta(df_pyg, ['Gastos financieros'], hacer_abs=True)[orig_last_year])
     v_impuestos = float(encontrar_cuenta(df_pyg, ["Impuesto a la renta"], hacer_abs=True)[orig_last_year])
     
-    # Text template para forzar etiquetas
     fig2 = go.Figure(go.Waterfall(
         orientation = "v", measure = ["absolute", "relative", "relative", "total", "relative", "relative", "total"],
         x = ["Ventas", "Costo", "Gastos Op.", "Res. Operativo", "Gastos Fin.", "Impuestos", "Utilidad Neta"],
@@ -319,7 +317,6 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
         text=[f"{v/1e6:.1f}M" for v in [v_ventas, v_costo, v_gastos_op, v_ventas-v_costo-v_gastos_op, v_gastos_fin, v_impuestos, float(encontrar_cuenta(df_pyg, ["RESULTADO DEL EJERCICIO"])[orig_last_year])]],
         textposition='auto', textfont=dict(size=F_DATA)
     ))
-    # Para cascada el rango automático suele funcionar mejor, pero aplicamos estilo
     fig2 = apply_style(fig2, f"Cascada de Resultados ({last_year})")
     figs['Cascada'] = fig2
 
@@ -333,20 +330,28 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig3 = apply_style(fig3, "Evolución de Ventas", max_ventas)
     figs['Ventas'] = fig3
 
-    # 4. Grandes Grupos del Balance (RECUPERADO)
+    # 4. Capital de Trabajo (RECUPERADO)
+    list_act_cte = encontrar_cuenta(df_balance, ['Activo Corriente']).astype(float).tolist()
+    list_pas_cte = encontrar_cuenta(df_balance, ['Pasivo Corriente']).astype(float).tolist()
+    list_neto = [(a - p) for a, p in zip(list_act_cte, list_pas_cte)]
+    max_cap = max(max(list_act_cte), max(list_pas_cte)) if list_act_cte else 0
+    
+    fig4 = go.Figure()
+    fig4.add_trace(go.Bar(name='Activo Corriente', x=years_list, y=list_act_cte, marker_color=c_blue_light, text=[f"{v/1e6:.1f}M" for v in list_act_cte], textposition='auto', textfont=dict(size=F_DATA)))
+    fig4.add_trace(go.Bar(name='Pasivo Corriente', x=years_list, y=list_pas_cte, marker_color=c_yellow, text=[f"{v/1e6:.1f}M" for v in list_pas_cte], textposition='auto', textfont=dict(size=F_DATA)))
+    fig4.add_trace(go.Scatter(name='Capital de Trabajo Neto', x=years_list, y=list_neto, mode='lines+markers+text', text=[f"{v/1e6:.1f}M" for v in list_neto], textposition="top center", line=dict(color='green', width=3, dash='dot'), marker=dict(size=10, color='green'), textfont=dict(size=F_DATA)))
+    fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
+    figs['CapitalTrabajo'] = fig4
+
+    # 5. Grandes Grupos del Balance
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
-    
-    # Asignamos un color fijo a cada categoría para que se vea ordenado en la agrupación
     colors_grupos = [c_blue_light, c_blue_dark, c_yellow, c_ochre, c_brown]
     
-    # Iteramos por AÑO (Grupos)
-    # Reestructuramos: X = Años, Barras agrupadas = Categorías
     for idx_cat, cat in enumerate(categories):
         vals = []
         for year_col in df_balance.columns:
-             # Buscar cuenta exacta
              if cat == 'Activo Cte': val = float(encontrar_cuenta(df_balance, ['Activo Corriente'])[year_col])
              elif cat == 'Activo No Cte': val = float(encontrar_cuenta(df_balance, ['Activo No Corriente'])[year_col])
              elif cat == 'Pasivo Cte': val = float(encontrar_cuenta(df_balance, ['Pasivo Corriente'])[year_col])
@@ -354,7 +359,6 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
              else: val = float(encontrar_cuenta(df_balance, ['PATRIMONIO TOTAL'])[year_col])
              vals.append(val)
         
-        # Guardar max para eje Y
         if vals: max_val_grupos = max(max_val_grupos, max(vals))
         
         fig_grupos.add_trace(go.Bar(
@@ -366,7 +370,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig_grupos = apply_style(fig_grupos, "Evolución Grandes Grupos", max_val_grupos)
     figs['GrandesGrupos'] = fig_grupos
 
-    # 5. Liquidez (Líneas Gruesas + Cuadrados)
+    # 6. Liquidez
     liq_corr = df_ratios.loc['Liquidez Corriente'].values.tolist()
     pru_acid = df_ratios.loc['Prueba Ácida'].values.tolist()
     max_liq = max(max(liq_corr), max(pru_acid)) if liq_corr else 0
@@ -379,7 +383,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig5 = apply_style(fig5, "Liquidez", max_liq)
     figs['Liquidez'] = fig5
 
-    # 6. Rentabilidad
+    # 7. Rentabilidad
     roe = df_ratios.loc['ROE'].values.tolist()
     roa = df_ratios.loc['ROA'].values.tolist()
     max_rent = max(max(roe), max(roa)) if roe else 0
@@ -393,7 +397,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig6 = apply_style(fig6, "Rentabilidad (ROE/ROA)", max_rent)
     figs['Rentabilidad'] = fig6
 
-    # 7. Margenes
+    # 8. Margenes
     m_bruto = df_ratios.loc['Margen Bruto'].values.tolist()
     m_oper = df_ratios.loc['Margen Operativo'].values.tolist()
     m_neto = df_ratios.loc['Margen Neto'].values.tolist()
@@ -410,7 +414,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig7 = apply_style(fig7, "Márgenes", max_marg)
     figs['Margenes'] = fig7
 
-    # 8. Actividad (CORREGIDO TITULO)
+    # 9. Actividad
     rot_cxc = df_ratios.loc['Rotación CxC (días)'].values.tolist()
     rot_inv = df_ratios.loc['Rotación Inventario (días)'].values.tolist()
     rot_cxp = df_ratios.loc['Rotación CxP (días)'].values.tolist()
@@ -430,7 +434,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         workbook = writer.book
         
-        # --- ESTILOS ---
+        # --- ESTILOS EXCEL ---
         header_format = workbook.add_format({
             'bold': True, 'text_wrap': True, 'valign': 'top', 'fg_color': '#004c70', 
             'font_color': 'white', 'border': 1, 'align': 'center'
@@ -439,7 +443,6 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         pct_format = workbook.add_format({'num_format': '0.0%', 'border': 1})
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
         
-        # Definición de hojas
         sheets = {
             'Balance_Analizado': df_balance,
             'Ratios_Financieros': df_ratios
@@ -466,7 +469,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
                 else:
                     worksheet.set_column(col_idx, col_idx, 18, num_format)
 
-        # 2. Escribir Resultados e Indicadores en LA MISMA HOJA
+        # 2. Escribir Resultados e Indicadores
         sheet_pyg = 'Resultados_e_Indicadores'
         worksheet_pyg = workbook.add_worksheet(sheet_pyg)
         writer.sheets[sheet_pyg] = worksheet_pyg
@@ -528,12 +531,12 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN HOTMART (NUEVO) ---
+    # --- BOTÓN HOTMART (COLOR AZUL OSCURO Y TEXTO NUEVO) ---
     st.markdown("""
     <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn">
         <div style="
             width: 100%;
-            background-color: #1b154f; 
+            background-color: #004c70; 
             color: white; 
             padding: 15px; 
             text-align: center; 
@@ -543,17 +546,17 @@ with st.sidebar:
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
         ">
-            🔥 Curso Análisis y Proyección de EEFF - 25% OFF
+            🔥 Curso Especializado: Análisis y Proyección de EEFF - 25% OFF
         </div>
     </a>
     """, unsafe_allow_html=True)
     
-    # --- BOTÓN BENTO (RENOMBRADO) ---
+    # --- BOTÓN BENTO ---
     st.markdown("""
     <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn">
         <div style="
             width: 100%;
-            background-color: #7a7985; 
+            background-color: #ed7d31; 
             color: white; 
             padding: 15px; 
             text-align: center; 
@@ -563,7 +566,7 @@ with st.sidebar:
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 20px;
         ">
-            ➡️ Mas cursos y mis servicios
+            Mas cursos y mis servicios
         </div>
     </a>
     """, unsafe_allow_html=True)
@@ -624,24 +627,28 @@ if uploaded_file is not None:
             with col2: st.plotly_chart(figs['Cascada'], use_container_width=True)
             st.divider()
             
-            # FILA 2 (Recuperamos Grandes Grupos)
+            # FILA 2 (Recuperamos Capital de Trabajo al lado de Ventas)
             col3, _, col4 = st.columns([1, 0.1, 1])
             with col3: st.plotly_chart(figs['Ventas'], use_container_width=True)
-            with col4: st.plotly_chart(figs['GrandesGrupos'], use_container_width=True)
+            with col4: st.plotly_chart(figs['CapitalTrabajo'], use_container_width=True)
+            st.divider()
+
+            # FILA 3 (Grandes Grupos - FULL WIDTH)
+            st.plotly_chart(figs['GrandesGrupos'], use_container_width=True)
             st.divider()
             
-            # FILA 3
+            # FILA 4
             col5, _, col6 = st.columns([1, 0.1, 1])
             with col5: st.plotly_chart(figs['Liquidez'], use_container_width=True)
             with col6: st.plotly_chart(figs['Rentabilidad'], use_container_width=True)
             st.divider()
             
-            # FILA 4
+            # FILA 5
             col7, _, col8 = st.columns([1, 0.1, 1])
             with col7: st.plotly_chart(figs['Margenes'], use_container_width=True)
             with col8: st.plotly_chart(figs['Actividad'], use_container_width=True)
         
-        # --- BOTÓN DE DESCARGA PRINCIPAL (MOVIO AL FINAL) ---
+        # --- BOTÓN DE DESCARGA PRINCIPAL ---
         st.divider()
         st.write("### 📥 Descarga tu Informe")
         st.download_button(
@@ -649,11 +656,16 @@ if uploaded_file is not None:
             data=excel_data,
             file_name=f"Reporte_Financiero_{datetime.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            type="primary", # Botón rojo/destacado
+            type="primary", 
             use_container_width=True
         )
 
     except Exception as e:
         st.error(f"Error técnico: {e}")
 else:
-    st.info("👋 ¡Hola! Para usar esta App, primero descarga la plantilla del menú izquierdo, complétala y súbela. Después, ¡Descarga tu Reporte en Excel! 🚀 ")
+    # TEXTO CAMBIADO
+    st.info("""
+    👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
+    
+    Después, ¡Descarga tu Reporte en Excel! 🚀
+    """)
