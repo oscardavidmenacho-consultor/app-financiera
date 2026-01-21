@@ -46,15 +46,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (CORREGIDO DARK MODE) ---
+# --- LAYOUT DE CABECERA (CORREGIDO PARA MODO OSCURO AUTOMÁTICO) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # Usamos var(--text-color) para que el color del texto se adapte automáticamente (Blanco/Negro)
+    # Al quitar la propiedad 'color' en h3 y p, Streamlit aplica el color del tema automáticamente (Blanco o Negro)
     st.markdown("""
         <h1 style='margin-bottom: 0px; color: #004c70;'>Análisis de Estados Financieros Automatizado</h1>
-        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4; color: var(--text-color);'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
-        <p style='font-size: 1.4rem; color: var(--text-color); margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
+        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
+        <p style='font-size: 1.4rem; margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
     """, unsafe_allow_html=True)
 
 with col_ban2:
