@@ -666,6 +666,8 @@ else:
     # TEXTO CAMBIADO
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
-    
+
+    📊 Obtendrás: 1. Análisis Vertical y Horizontal. 2. Los Ratios Financieros 3. Dashboard Interactivo.
+        
     Después, ¡Descarga tu Reporte en Excel! 🚀
     """)
