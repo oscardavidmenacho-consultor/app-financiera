@@ -30,7 +30,7 @@ st.markdown("""
     }
     /* Aumentar tamaño de fuente en tablas (Dataframes) */
     .stDataFrame {
-        font-size: 1.8rem !important;
+        font-size: 1.4rem !important;
     }
     /* Header de tablas (Intentar forzar estilo nativo) */
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
