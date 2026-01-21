@@ -656,4 +656,5 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Error técnico: {e}")
 else:
-    st.info("👋 ¡Hola! Para usar esta App, primero descarga la plantilla del menú izquierdo, complétala y súbela. 🚀 Luego, ¡Descarga tu Reporte en Excel!")
+    st.info("👋 ¡Hola! Para usar esta App, primero descarga la plantilla del menú izquierdo, complétala y súbela.
+    🚀 Después, ¡Descarga tu Reporte en Excel!")
