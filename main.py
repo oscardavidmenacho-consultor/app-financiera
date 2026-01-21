@@ -14,7 +14,7 @@ st.markdown("""
 <style>
     /* Aumentar fuente de pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         font-weight: 600;
     }
     /* Fondo general */
@@ -30,7 +30,7 @@ st.markdown("""
     }
     /* Aumentar tamaño de fuente en tablas (Dataframes) */
     .stDataFrame {
-        font-size: 1.2rem !important;
+        font-size: 1.4rem !important;
     }
     /* Header de tablas (Intentar forzar estilo nativo) */
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
