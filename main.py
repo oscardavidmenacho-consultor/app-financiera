@@ -6,15 +6,15 @@ from datetime import datetime
 import plotly.graph_objects as go
 import os
 
-# --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="PROFINANCE | Análisis Financiero", page_icon="📊", layout="wide")
+# --- CONFIGURACIÓN DE LA PÁGINA (CAMBIO 4: NOMBRE EN PESTAÑA) ---
+st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
     /* Aumentar fuente de pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         font-weight: 600;
     }
     /* Fondo general */
@@ -28,14 +28,20 @@ st.markdown("""
     a.custom-btn:hover {
         opacity: 0.9;
     }
-    /* Aumentar tamaño de fuente en tablas (Dataframes) */
+    /* CAMBIO 3: FUENTE TABLAS MÁS GRANDE (INTERFAZ) */
     .stDataFrame {
-        font-size: 1.4rem !important;
+        font-size: 1.3rem !important;
     }
-    /* Header de tablas (Intentar forzar estilo nativo) */
+    /* CAMBIO 1: AUMENTAR TEXTO DE ALERTAS (HOLA) */
+    .stAlert p {
+        font-size: 1.2rem !important;
+        line-height: 1.5 !important;
+    }
+    /* Header de tablas */
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
         background-color: #004c70;
         color: white;
+        font-size: 1.2rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -44,9 +50,10 @@ st.markdown("""
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    st.title("Análisis de Estados Financieros")
-    # CAMBIO SOLICITADO: TEXTO DE SUBTÍTULO
-    st.markdown("### Oscar Menacho | Consultor y Docente Financiero")
+    # CAMBIO: OPCIÓN A + AJUSTES DE TEXTO
+    st.title("Análisis de Estados Financieros Automatizado")
+    st.markdown("##### Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.")
+    st.caption("Oscar Menacho | Consultor y Docente Financiero")
 
 with col_ban2:
     banner_file = "banner.jpg"
@@ -85,17 +92,16 @@ def aplicar_estilos_df(df, tipo='balance'):
         else:
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
-    # Estilizado de Pandas (Headers Azules y Fuente Grande)
+    # Estilizado de Pandas (CAMBIO 3: FUENTE 20px)
     styler = df_visual.style.set_properties(**{
-        'font-size': '18px', # Fuente aumentada
+        'font-size': '20px', 
         'text-align': 'center',
         'border-color': 'lightgray'
     }).set_table_styles([
-        # CAMBIO SOLICITADO: Relleno Azul en Encabezados
         {'selector': 'th', 'props': [
             ('background-color', '#004c70'), 
             ('color', 'white'), 
-            ('font-size', '18px'),
+            ('font-size', '20px'),
             ('font-weight', 'bold'),
             ('text-align', 'center')
         ]}
@@ -330,7 +336,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig3 = apply_style(fig3, "Evolución de Ventas", max_ventas)
     figs['Ventas'] = fig3
 
-    # 4. Capital de Trabajo (RECUPERADO)
+    # 4. Capital de Trabajo
     list_act_cte = encontrar_cuenta(df_balance, ['Activo Corriente']).astype(float).tolist()
     list_pas_cte = encontrar_cuenta(df_balance, ['Pasivo Corriente']).astype(float).tolist()
     list_neto = [(a - p) for a, p in zip(list_act_cte, list_pas_cte)]
@@ -551,7 +557,7 @@ with st.sidebar:
     </a>
     """, unsafe_allow_html=True)
     
-    # --- BOTÓN BENTO ---
+    # --- BOTÓN BENTO (CON EMOJI) ---
     st.markdown("""
     <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn">
         <div style="
@@ -566,7 +572,7 @@ with st.sidebar:
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 20px;
         ">
-            Mas cursos y mis servicios
+            🎯 Mas cursos y mis servicios
         </div>
     </a>
     """, unsafe_allow_html=True)
@@ -589,85 +595,4 @@ if uploaded_file is not None:
         df_pyg_orig = clean_column_headers(df_pyg_orig)
         for df in [df_bal, df_pyg_orig]:
             df.index.name = 'Cuenta'
-            for col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
-            df.fillna(0, inplace=True)
-        
-        df_bal_an = procesar_balance(df_bal)
-        df_ind_pyg = procesar_pyg(df_pyg_orig)
-        df_ratios = calcular_ratios(df_bal, df_pyg_orig)
-        
-        figs = crear_figuras_dashboard(df_bal, df_pyg_orig, df_ind_pyg, df_ratios)
-        excel_data = to_excel(df_bal_an, df_pyg_orig, df_ind_pyg, df_ratios, figs)
-
-        # --- SECCIÓN DE PESTAÑAS ---
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Balance", "📈 P&G", "🔢 Ratios", "🖼️ DASHBOARD"])
-
-        with tab1:
-            st.header("Análisis del Balance General")
-            st.dataframe(aplicar_estilos_df(df_bal_an, 'balance'), use_container_width=True)
-            
-        with tab2:
-            st.header("Análisis del Estado de Resultados (P&G)")
-            st.subheader("Estado de Resultados Original")
-            st.dataframe(aplicar_estilos_df(df_pyg_orig, 'balance'), use_container_width=True)
-            st.divider()
-            st.subheader("Indicadores P&G")
-            st.dataframe(aplicar_estilos_df(df_ind_pyg, 'ratios'), use_container_width=True)
-            
-        with tab3:
-            st.header("Ratios Financieros Clave")
-            st.dataframe(aplicar_estilos_df(df_ratios, 'ratios'), use_container_width=True)
-            
-        with tab4:
-            st.header("Dashboard Gráfico Interactivo")
-            
-            # FILA 1
-            col1, _, col2 = st.columns([1, 0.1, 1])
-            with col1: st.plotly_chart(figs['Estructura'], use_container_width=True)
-            with col2: st.plotly_chart(figs['Cascada'], use_container_width=True)
-            st.divider()
-            
-            # FILA 2 (Recuperamos Capital de Trabajo al lado de Ventas)
-            col3, _, col4 = st.columns([1, 0.1, 1])
-            with col3: st.plotly_chart(figs['Ventas'], use_container_width=True)
-            with col4: st.plotly_chart(figs['CapitalTrabajo'], use_container_width=True)
-            st.divider()
-
-            # FILA 3 (Grandes Grupos - FULL WIDTH)
-            st.plotly_chart(figs['GrandesGrupos'], use_container_width=True)
-            st.divider()
-            
-            # FILA 4
-            col5, _, col6 = st.columns([1, 0.1, 1])
-            with col5: st.plotly_chart(figs['Liquidez'], use_container_width=True)
-            with col6: st.plotly_chart(figs['Rentabilidad'], use_container_width=True)
-            st.divider()
-            
-            # FILA 5
-            col7, _, col8 = st.columns([1, 0.1, 1])
-            with col7: st.plotly_chart(figs['Margenes'], use_container_width=True)
-            with col8: st.plotly_chart(figs['Actividad'], use_container_width=True)
-        
-        # --- BOTÓN DE DESCARGA PRINCIPAL ---
-        st.divider()
-        st.write("### 📥 Descarga tu Informe")
-        st.download_button(
-            label="DESCARGAR REPORTE EXCEL COMPLETO",
-            data=excel_data,
-            file_name=f"Reporte_Financiero_{datetime.now().strftime('%Y%m%d')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            type="primary", 
-            use_container_width=True
-        )
-
-    except Exception as e:
-        st.error(f"Error técnico: {e}")
-else:
-    # TEXTO CAMBIADO
-    st.info("""
-    👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
-
-    📊 Obtendrás: 1. Análisis Vertical y Horizontal. 2. Los Ratios Financieros 3. Dashboard Interactivo.
-        
-    Después, ¡Descarga tu Reporte en Excel! 🚀
-    """)
+            for col in df.columns: df[col] = pd.to_numeric(df
