@@ -701,5 +701,5 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel! 🚀
+    Después, ¡Descarga tu Reporte en Excel totalmente gratis 🚀!
     """)
