@@ -52,7 +52,7 @@ col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 with col_ban1:
     st.markdown("""
         <h1 style='margin-bottom: 0px; color: #004c70;'>Análisis de Estados Financieros Automatizado</h1>
-        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
+        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Vertical/Horizontal + Ratios + Dashboard en segundos.</h3>
         <p style='font-size: 1.4rem; color: #333; margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
     """, unsafe_allow_html=True)
 
