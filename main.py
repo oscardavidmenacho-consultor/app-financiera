@@ -6,7 +6,7 @@ from datetime import datetime
 import plotly.graph_objects as go
 import os
 
-# --- CONFIGURACIÓN DE LA PÁGINA (CAMBIO 4: NOMBRE EN PESTAÑA) ---
+# --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
@@ -28,11 +28,11 @@ st.markdown("""
     a.custom-btn:hover {
         opacity: 0.9;
     }
-    /* CAMBIO 3: FUENTE TABLAS MÁS GRANDE (INTERFAZ) */
+    /* FUENTE TABLAS MÁS GRANDE (INTERFAZ) */
     .stDataFrame {
         font-size: 1.3rem !important;
     }
-    /* CAMBIO 1: AUMENTAR TEXTO DE ALERTAS (HOLA) */
+    /* TEXTO DE ALERTAS (HOLA) MÁS GRANDE */
     .stAlert p {
         font-size: 1.2rem !important;
         line-height: 1.5 !important;
@@ -46,14 +46,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA ---
+# --- LAYOUT DE CABECERA (MODIFICADO CON HTML PARA CONTROL TOTAL) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # CAMBIO: OPCIÓN A + AJUSTES DE TEXTO
-    st.title("Análisis de Estados Financieros Automatizado")
-    st.markdown("##### Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.")
-    st.caption("Oscar Menacho | Consultor y Docente Financiero")
+    # Usamos HTML directo para controlar pesos y tamaños exactos
+    st.markdown("""
+        <h1 style='margin-bottom: 0px; color: #004c70;'>Análisis de Estados Financieros Automatizado</h1>
+        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
+        <p style='font-size: 1.4rem; color: #333; margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
+    """, unsafe_allow_html=True)
 
 with col_ban2:
     banner_file = "banner.jpg"
@@ -73,8 +75,10 @@ def formato_latino(valor, es_porcentaje=False, decimales=0):
         return "-"
     
     if es_porcentaje:
+        # Formato %
         return f"{valor * 100:,.{decimales}f}%".replace(".", "X").replace(",", ".").replace("X", ",")
     else:
+        # Formato número normal
         return f"{valor:,.{decimales}f}".replace(".", "X").replace(",", ".").replace("X", ",")
 
 def aplicar_estilos_df(df, tipo='balance'):
@@ -83,16 +87,29 @@ def aplicar_estilos_df(df, tipo='balance'):
     
     for col in df_visual.columns:
         col_lower = str(col).lower()
-        if any(x in col_lower for x in ['%', 'margen', 'roa', 'roe', 'crecimiento', 'var_%', 'av_']):
-            df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
-        elif 'días' in col_lower or 'dias' in col_lower:
-            df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
-        elif tipo == 'ratios' and not any(x in col_lower for x in ['días', '%']):
-            df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=2))
+        
+        # LÓGICA ESPECÍFICA PARA RATIOS (NUEVA)
+        if tipo == 'ratios':
+            if 'días' in col_lower or 'dias' in col_lower:
+                # Días: Enteros
+                df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
+            elif any(x in col_lower for x in ['margen', 'roa', 'roe']):
+                # Márgenes/Rentabilidad: % sin decimales
+                df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=0))
+            else:
+                # El resto (Liquidez, Endeudamiento): 1 decimal
+                df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=1))
+        
+        # LÓGICA PARA BALANCE Y PyG
         else:
-            df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
+            if any(x in col_lower for x in ['%', 'var_%', 'av_']):
+                # Porcentajes con 1 decimal
+                df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
+            else:
+                # Dinero: Enteros
+                df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
-    # Estilizado de Pandas (CAMBIO 3: FUENTE 20px)
+    # Estilizado de Pandas (FUENTE GRANDE 20px)
     styler = df_visual.style.set_properties(**{
         'font-size': '20px', 
         'text-align': 'center',
@@ -349,7 +366,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance
+    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -373,7 +390,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
             text=[f"{v/1e6:.1f}M" for v in vals], textposition='auto', textfont=dict(size=F_DATA)
         ))
 
-    fig_grupos = apply_style(fig_grupos, "Evolución Grandes Grupos", max_val_grupos)
+    fig_grupos = apply_style(fig_grupos, "Evolución Grandes Grupos del Balance", max_val_grupos)
     figs['GrandesGrupos'] = fig_grupos
 
     # 6. Liquidez
@@ -537,7 +554,7 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN HOTMART (COLOR AZUL OSCURO Y TEXTO NUEVO) ---
+    # --- BOTÓN HOTMART ---
     st.markdown("""
     <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn">
         <div style="
@@ -557,7 +574,7 @@ with st.sidebar:
     </a>
     """, unsafe_allow_html=True)
     
-    # --- BOTÓN BENTO (CON EMOJI) ---
+    # --- BOTÓN BENTO ---
     st.markdown("""
     <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn">
         <div style="
@@ -595,7 +612,8 @@ if uploaded_file is not None:
         df_pyg_orig = clean_column_headers(df_pyg_orig)
         for df in [df_bal, df_pyg_orig]:
             df.index.name = 'Cuenta'
-            for col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
+            for col in df.columns: 
+                df[col] = pd.to_numeric(df[col], errors='coerce')
             df.fillna(0, inplace=True)
         
         df_bal_an = procesar_balance(df_bal)
@@ -622,6 +640,7 @@ if uploaded_file is not None:
             
         with tab3:
             st.header("Ratios Financieros Clave")
+            # APLICAMOS ESTILO ESPECÍFICO PARA RATIOS
             st.dataframe(aplicar_estilos_df(df_ratios, 'ratios'), use_container_width=True)
             
         with tab4:
@@ -633,7 +652,7 @@ if uploaded_file is not None:
             with col2: st.plotly_chart(figs['Cascada'], use_container_width=True)
             st.divider()
             
-            # FILA 2 (Recuperamos Capital de Trabajo al lado de Ventas)
+            # FILA 2
             col3, _, col4 = st.columns([1, 0.1, 1])
             with col3: st.plotly_chart(figs['Ventas'], use_container_width=True)
             with col4: st.plotly_chart(figs['CapitalTrabajo'], use_container_width=True)
@@ -654,7 +673,7 @@ if uploaded_file is not None:
             with col7: st.plotly_chart(figs['Margenes'], use_container_width=True)
             with col8: st.plotly_chart(figs['Actividad'], use_container_width=True)
         
-        # --- BOTÓN DE DESCARGA PRINCIPAL (MOVIO AL FINAL) ---
+        # --- BOTÓN DE DESCARGA PRINCIPAL ---
         st.divider()
         st.write("### 📥 Descarga tu Informe")
         st.download_button(
@@ -662,14 +681,13 @@ if uploaded_file is not None:
             data=excel_data,
             file_name=f"Reporte_Financiero_{datetime.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            type="primary", # Botón rojo/destacado
+            type="primary", 
             use_container_width=True
         )
 
     except Exception as e:
         st.error(f"Error técnico: {e}")
 else:
-    # TEXTO CAMBIADO (CAMBIO 5)
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
