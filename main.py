@@ -46,14 +46,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA ---
+# --- LAYOUT DE CABECERA (CORREGIDO DARK MODE) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
+    # Usamos var(--text-color) para que el color del texto se adapte automáticamente (Blanco/Negro)
     st.markdown("""
         <h1 style='margin-bottom: 0px; color: #004c70;'>Análisis de Estados Financieros Automatizado</h1>
-        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Vertical/Horizontal + Ratios + Dashboard en segundos.</h3>
-        <p style='font-size: 1.4rem; color: #333; margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
+        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4; color: var(--text-color);'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
+        <p style='font-size: 1.4rem; color: var(--text-color); margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
     """, unsafe_allow_html=True)
 
 with col_ban2:
@@ -79,7 +80,7 @@ def formato_latino(valor, es_porcentaje=False, decimales=0):
         return f"{valor:,.{decimales}f}".replace(".", "X").replace(",", ".").replace("X", ",")
 
 def aplicar_estilos_df(df, tipo='balance'):
-    """Aplica colores y formato visual inteligente según el tipo de tabla"""
+    """Aplica colores a encabezados y formato visual a los datos"""
     df_visual = df.copy()
     
     # CASO 1: INDICADORES P&G (Todo % con 1 decimal)
@@ -91,31 +92,24 @@ def aplicar_estilos_df(df, tipo='balance'):
     elif tipo == 'ratios':
         for idx in df_visual.index:
             idx_str = str(idx).lower()
-            # Determinar formato según el nombre del ratio
             if 'días' in idx_str or 'dias' in idx_str:
-                # Días: Enteros
                 fmt = lambda x: formato_latino(x, decimales=0)
             elif any(x in idx_str for x in ['margen', 'roa', 'roe']):
-                # Márgenes: % sin decimales
                 fmt = lambda x: formato_latino(x, es_porcentaje=True, decimales=0)
             else:
-                # Resto: 1 decimal
                 fmt = lambda x: formato_latino(x, decimales=1)
             
-            # Aplicar formato a todas las columnas de esa fila
             for col in df_visual.columns:
                 val = df_visual.loc[idx, col]
                 df_visual.loc[idx, col] = fmt(val)
 
-    # CASO 3: BALANCE Y ORIGINAL (Formato basado en COLUMNA)
-    else: # tipo == 'balance'
+    # CASO 3: BALANCE Y ORIGINAL
+    else: 
         for col in df_visual.columns:
             col_lower = str(col).lower()
             if any(x in col_lower for x in ['%', 'var_%', 'av_']):
-                # Porcentajes con 1 decimal
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
             else:
-                # Dinero: Enteros
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
     # Estilizado de Pandas
@@ -375,7 +369,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
+    # 5. Grandes Grupos del Balance
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -701,5 +695,5 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel totalmente gratis 🚀!
+    Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
