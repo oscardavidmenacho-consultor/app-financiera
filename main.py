@@ -12,49 +12,65 @@ st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon=
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
-    /* Aumentar fuente de pestañas */
+    /* Estilos Generales */
+    .stApp {
+        background-color: #f9f9f9; 
+    }
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
     }
-    /* Fondo general */
-    .stApp {
-        background-color: #f9f9f9; 
-    }
-    /* Estilo para botones personalizados */
+    /* Botones Personalizados */
     a.custom-btn {
         text-decoration: none !important;
     }
     a.custom-btn:hover {
         opacity: 0.9;
     }
-    /* FUENTE TABLAS MÁS GRANDE (INTERFAZ) */
+    /* Tablas Grandes */
     .stDataFrame {
         font-size: 1.3rem !important;
     }
-    /* TEXTO DE ALERTAS (HOLA) MÁS GRANDE */
-    .stAlert p {
-        font-size: 1.2rem !important;
-        line-height: 1.5 !important;
-    }
-    /* Header de tablas */
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
         background-color: #004c70;
         color: white;
         font-size: 1.2rem !important;
     }
+    /* Alertas */
+    .stAlert p {
+        font-size: 1.2rem !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* --- CLASES ESPECÍFICAS PARA EL ENCABEZADO (SOLUCIÓN MODO OSCURO) --- */
+    .header-title {
+        margin-bottom: 0px; 
+        color: #004c70; /* Azul corporativo siempre */
+    }
+    .header-subtitle {
+        font-weight: normal; 
+        margin-top: 10px; 
+        font-size: 1.5rem; 
+        line-height: 1.4;
+        color: var(--text-color) !important; /* SE ADAPTA AL TEMA */
+    }
+    .header-name {
+        font-size: 1.4rem; 
+        margin-top: 15px; 
+        font-weight: 500;
+        color: var(--text-color) !important; /* SE ADAPTA AL TEMA */
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (CORREGIDO PARA MODO OSCURO AUTOMÁTICO) ---
+# --- LAYOUT DE CABECERA (USANDO CLASES CSS) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # Al quitar la propiedad 'color' en h3 y p, Streamlit aplica el color del tema automáticamente (Blanco o Negro)
     st.markdown("""
-        <h1 style='margin-bottom: 0px; color: #004c70;'>Análisis de Estados Financieros Automatizado</h1>
-        <h3 style='font-weight: normal; margin-top: 10px; font-size: 1.5rem; line-height: 1.4;'>Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
-        <p style='font-size: 1.4rem; margin-top: 15px; font-weight: 500;'>Oscar Menacho | Consultor y Docente Financiero</p>
+        <h1 class="header-title">Análisis de Estados Financieros Automatizado</h1>
+        <h3 class="header-subtitle">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</h3>
+        <p class="header-name">Oscar Menacho | Consultor y Docente Financiero</p>
     """, unsafe_allow_html=True)
 
 with col_ban2:
@@ -91,14 +107,21 @@ def aplicar_estilos_df(df, tipo='balance'):
     # CASO 2: RATIOS (Formato basado en la FILA/INDEX)
     elif tipo == 'ratios':
         for idx in df_visual.index:
+            # Normalizamos el nombre del índice para la búsqueda (minúsculas)
             idx_str = str(idx).lower()
+            
+            # Determinamos el formato para TODA la fila
             if 'días' in idx_str or 'dias' in idx_str:
+                # Días: Enteros (0 decimales)
                 fmt = lambda x: formato_latino(x, decimales=0)
             elif any(x in idx_str for x in ['margen', 'roa', 'roe']):
+                # Márgenes/Rentabilidad: % sin decimales
                 fmt = lambda x: formato_latino(x, es_porcentaje=True, decimales=0)
             else:
+                # Resto (Liquidez, Endeudamiento): 1 decimal
                 fmt = lambda x: formato_latino(x, decimales=1)
             
+            # Aplicamos el formato celda por celda en esa fila
             for col in df_visual.columns:
                 val = df_visual.loc[idx, col]
                 df_visual.loc[idx, col] = fmt(val)
@@ -369,7 +392,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance
+    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -639,12 +662,10 @@ if uploaded_file is not None:
             st.dataframe(aplicar_estilos_df(df_pyg_orig, 'balance'), use_container_width=True)
             st.divider()
             st.subheader("Indicadores P&G")
-            # APLICAMOS ESTILO ESPECÍFICO PARA INDICADORES (TODO %)
             st.dataframe(aplicar_estilos_df(df_ind_pyg, 'indicadores'), use_container_width=True)
             
         with tab3:
             st.header("Ratios Financieros Clave")
-            # APLICAMOS ESTILO ESPECÍFICO PARA RATIOS (FILA por FILA)
             st.dataframe(aplicar_estilos_df(df_ratios, 'ratios'), use_container_width=True)
             
         with tab4:
