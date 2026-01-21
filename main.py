@@ -49,7 +49,7 @@ with col_ban1:
     st.markdown('<h1 style="color:#004c70; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
     
     # 2. SUBTÍTULO: Gris oscuro FIJO (#333333). Importante para que se vea sobre el fondo claro.
-    st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Vertical/Horizontal + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
     
     # 3. NOMBRE: Gris oscuro FIJO (#333333).
     st.markdown('<p style="color:#333333; font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</p>', unsafe_allow_html=True)
