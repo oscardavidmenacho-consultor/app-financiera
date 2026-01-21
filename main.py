@@ -14,7 +14,7 @@ st.markdown("""
 <style>
     /* Aumentar fuente de pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: 600;
     }
     /* Fondo general */
@@ -30,7 +30,7 @@ st.markdown("""
     }
     /* Aumentar tamaño de fuente en tablas (Dataframes) */
     .stDataFrame {
-        font-size: 1.1rem !important;
+        font-size: 1.2rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -41,7 +41,7 @@ col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
     st.title("Análisis de Estados Financieros")
-    st.markdown("### Oscar Menacho | Consultoría Financiera Corporativa")
+    st.markdown("### Oscar Menacho | Consultor y Docente Financiero")
 
 with col_ban2:
     banner_file = "banner.jpg"
@@ -543,7 +543,7 @@ with st.sidebar:
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
         ">
-            🔥 Curso EEFF - 25% OFF
+            🔥 Curso Análisis y Proyección de EEFF - 25% OFF
         </div>
     </a>
     """, unsafe_allow_html=True)
