@@ -12,6 +12,7 @@ st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon=
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
+    /* Forzamos fondo claro siempre */
     .stApp {
         background-color: #f9f9f9; 
     }
@@ -37,27 +38,21 @@ st.markdown("""
         color: white;
         font-size: 1.2rem !important;
     }
-    /* Eliminar margen superior extra de los markdowns personalizados */
-    div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4, div[data-testid="stMarkdownContainer"] > h5 {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (SOLUCIÓN HÍBRIDA V42) ---
+# --- LAYOUT DE CABECERA (SOLUCIÓN INFALIBLE V43: COLOR FIJO) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # 1. TÍTULO: Usamos HTML directo porque queremos un color FIJO (Azul) que no cambia con el tema.
-    st.markdown('<h1 style="color:#004c70; font-size:3rem; margin-bottom:0; padding-bottom:0;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
+    # 1. TÍTULO: Azul corporativo fijo.
+    st.markdown('<h1 style="color:#004c70; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
     
-    # 2. SUBTÍTULO: Usamos Markdown '###' para que Streamlit controle el color (Blanco/Negro),
-    # pero usamos <span> para quitar la negrilla (font-weight: 400) y fijar tamaño.
-    st.markdown('### <span style="font-weight:400; font-size: 1.5rem; line-height: 1.4;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</span>', unsafe_allow_html=True)
+    # 2. SUBTÍTULO: Gris oscuro FIJO (#333333). Importante para que se vea sobre el fondo claro.
+    st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
     
-    # 3. NOMBRE: Igual, Markdown '###' para color automático + <span> para tamaño.
-    st.markdown('### <span style="font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</span>', unsafe_allow_html=True)
+    # 3. NOMBRE: Gris oscuro FIJO (#333333).
+    st.markdown('<p style="color:#333333; font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</p>', unsafe_allow_html=True)
 
 with col_ban2:
     banner_file = "banner.jpg"
