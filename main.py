@@ -18,7 +18,6 @@ st.markdown("""
     }
     
     /* --- CORRECCIÓN PESTAÑAS (TABS) --- */
-    /* Forzar color de texto oscuro en TODAS las pestañas para que se vean en Modo Oscuro */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
@@ -46,14 +45,19 @@ st.markdown("""
         color: white;
         font-size: 1.2rem !important;
     }
+    /* Ajuste márgenes títulos markdown */
+    div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (SOLUCIÓN INFALIBLE V43 REUTILIZADA) ---
+# --- LAYOUT DE CABECERA ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # Textos con color FIJO para resistir el Modo Oscuro
+    # Títulos con color FIJO para resistir el Modo Oscuro
     st.markdown('<h1 style="color:#004c70; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
     st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
     st.markdown('<p style="color:#333333; font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</p>', unsafe_allow_html=True)
@@ -84,12 +88,12 @@ def aplicar_estilos_df(df, tipo='balance'):
     """Aplica colores a encabezados y formato visual a los datos"""
     df_visual = df.copy()
     
-    # CASO 1: INDICADORES P&G (Todo % con 1 decimal)
+    # CASO 1: INDICADORES P&G
     if tipo == 'indicadores':
         for col in df_visual.columns:
             df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
 
-    # CASO 2: RATIOS (Formato basado en la FILA/INDEX)
+    # CASO 2: RATIOS
     elif tipo == 'ratios':
         for idx in df_visual.index:
             idx_str = str(idx).lower()
@@ -268,7 +272,7 @@ def calcular_ratios(df_balance, df_pyg):
         
     return ratios.astype(float).fillna(0)
 
-# --- CREAR FIGURAS DASHBOARD ---
+# --- CREAR FIGURAS DASHBOARD (CORREGIDO MODO OSCURO) ---
 def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     F_DATA = 16  
     F_AXIS = 16  
@@ -292,10 +296,11 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
             fig.update_yaxes(range=[0, max_y_val * 1.15]) 
             
         fig.update_layout(
-            title=dict(text=title_text, font=dict(size=F_TITLE)),
+            template='plotly_white', # <--- SOLUCIÓN: FORZAR TEMA CLARO EN GRAFICOS
+            title=dict(text=title_text, font=dict(size=F_TITLE, color="black")), # Forzar titulo negro
             barmode='group',
-            legend=dict(font=dict(size=F_LEG), orientation="v", yanchor="top", y=1, xanchor="left", x=1.02),
-            font=dict(size=14, color="black"), 
+            legend=dict(font=dict(size=F_LEG, color="black"), orientation="v", yanchor="top", y=1, xanchor="left", x=1.02), # Forzar leyenda negra
+            font=dict(size=14, color="black"), # Forzar todo el texto base negro
             margin=dict(l=50, r=20, t=80, b=40),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
@@ -696,5 +701,5 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel totalmente Gratis! 🚀
+    Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
