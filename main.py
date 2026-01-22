@@ -12,20 +12,28 @@ st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon=
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
-    /* Forzamos fondo claro siempre */
+    /* Forzar fondo claro */
     .stApp {
         background-color: #f9f9f9; 
     }
+    
+    /* --- CORRECCIÓN PESTAÑAS (TABS) --- */
+    /* Forzar color de texto oscuro en TODAS las pestañas para que se vean en Modo Oscuro */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
+        color: #444444 !important; /* Gris oscuro forzado */
     }
+    
+    /* Botones personalizados */
     a.custom-btn {
         text-decoration: none !important;
     }
     a.custom-btn:hover {
         opacity: 0.9;
     }
+    
+    /* Tablas y Textos */
     .stDataFrame {
         font-size: 1.3rem !important;
     }
@@ -41,17 +49,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA (SOLUCIÓN INFALIBLE V43: COLOR FIJO) ---
+# --- LAYOUT DE CABECERA (SOLUCIÓN INFALIBLE V43 REUTILIZADA) ---
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # 1. TÍTULO: Azul corporativo fijo.
+    # Textos con color FIJO para resistir el Modo Oscuro
     st.markdown('<h1 style="color:#004c70; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
-    
-    # 2. SUBTÍTULO: Gris oscuro FIJO (#333333). Importante para que se vea sobre el fondo claro.
-    st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Vertical/Horizontal + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
-    
-    # 3. NOMBRE: Gris oscuro FIJO (#333333).
+    st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
     st.markdown('<p style="color:#333333; font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</p>', unsafe_allow_html=True)
 
 with col_ban2:
@@ -90,13 +94,10 @@ def aplicar_estilos_df(df, tipo='balance'):
         for idx in df_visual.index:
             idx_str = str(idx).lower()
             if 'días' in idx_str or 'dias' in idx_str:
-                # Días: Enteros
                 fmt = lambda x: formato_latino(x, decimales=0)
             elif any(x in idx_str for x in ['margen', 'roa', 'roe']):
-                # Márgenes: % sin decimales
                 fmt = lambda x: formato_latino(x, es_porcentaje=True, decimales=0)
             else:
-                # Resto: 1 decimal
                 fmt = lambda x: formato_latino(x, decimales=1)
             
             for col in df_visual.columns:
@@ -695,5 +696,5 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
+    Después, ¡Descarga tu Reporte en Excel totalmente Gratis! 🚀
     """)
