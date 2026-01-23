@@ -78,7 +78,7 @@ st.divider()
 
 CORPORATE_COLORS = ['#004c70', '#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4']
 
-# --- FUNCIONES DE FORMATO VISUAL ---
+# --- FUNCIONES DE FORMATO VISUAL (INTERFAZ) ---
 def formato_latino(valor, es_porcentaje=False, decimales=0):
     """Convierte números a formato 1.000,00 (Punto mil, Coma decimal)"""
     if pd.isna(valor) or valor == 0:
@@ -117,11 +117,9 @@ def aplicar_estilos_df(df, tipo='balance'):
     else: 
         for col in df_visual.columns:
             col_lower = str(col).lower()
-            # Detectamos % (incluye 'Vertical_%' y 'Horizontal_%')
-            if '%' in col_lower or 'av_' in col_lower: 
+            if any(x in col_lower for x in ['%', 'var_%', 'av_']):
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
             else:
-                # Dinero (incluye 'Horizontal_$')
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
     # Estilizado de Pandas
@@ -169,7 +167,6 @@ def procesar_balance(df_balance):
     
     total_assets_last_year = encontrar_cuenta(df, ["ACTIVOS TOTALES"])[last_year]
     
-    # Columnas renombradas
     if total_assets_last_year != 0:
         df[f'Vertical_%_{last_year}'] = (df[last_year] / total_assets_last_year)
     else:
@@ -183,7 +180,6 @@ def procesar_balance(df_balance):
     elif len(years) > 1 and activos_totales_row.get(years[1], 0) > 0:
         base_year = years[1]
 
-    # Columnas renombradas
     if base_year and base_year != last_year:
         df[f'Horizontal_$ ({last_year} vs {base_year})'] = df[last_year] - df[base_year]
         numerador = df[last_year] - df[base_year]
@@ -476,89 +472,114 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         workbook = writer.book
         
         # --- ESTILOS EXCEL ---
-        header_format = workbook.add_format({
+        header_fmt = workbook.add_format({
             'bold': True, 'text_wrap': True, 'valign': 'top', 'fg_color': '#004c70', 
             'font_color': 'white', 'border': 1, 'align': 'center'
         })
-        num_format = workbook.add_format({'num_format': '#,##0', 'border': 1})
-        pct_format = workbook.add_format({'num_format': '0.0%', 'border': 1})
-        text_format = workbook.add_format({'border': 1, 'align': 'left'})
-        note_format = workbook.add_format({'italic': True, 'font_color': 'gray', 'align': 'left'})
+        text_fmt = workbook.add_format({'border': 1, 'align': 'left', 'bold': False})
         
-        sheets = {
-            'Balance_Analizado': df_balance,
-            'Ratios_Financieros': df_ratios
-        }
-
-        # 1. Escribir Balance y Ratios
-        for sheet_name, df in sheets.items():
-            df.to_excel(writer, sheet_name=sheet_name, startrow=1, header=False)
-            worksheet = writer.sheets[sheet_name]
+        # Formatos Numéricos
+        money_fmt = workbook.add_format({'num_format': '#,##0', 'border': 1})
+        int_fmt = workbook.add_format({'num_format': '0', 'border': 1})
+        pct_1dec_fmt = workbook.add_format({'num_format': '0.0%', 'border': 1})
+        pct_0dec_fmt = workbook.add_format({'num_format': '0%', 'border': 1})
+        float_1dec_fmt = workbook.add_format({'num_format': '0.0', 'border': 1})
+        note_fmt = workbook.add_format({'italic': True, 'font_color': 'gray', 'align': 'left'})
+        
+        # --- 1. HOJA BALANCE ---
+        sheet_bal = 'Balance_Analizado'
+        ws_bal = workbook.add_worksheet(sheet_bal)
+        writer.sheets[sheet_bal] = ws_bal
+        ws_bal.hide_gridlines(2)
+        
+        ws_bal.write(0, 0, "Cuenta / Concepto", header_fmt)
+        for col_num, value in enumerate(df_balance.columns.values):
+            ws_bal.write(0, col_num + 1, value, header_fmt)
             
-            for col_num, value in enumerate(df.columns.values):
-                worksheet.write(0, col_num + 1, value, header_format)
-            worksheet.write(0, 0, "Cuenta / Concepto", header_format)
+        for row_num, (index, row) in enumerate(df_balance.iterrows()):
+            ws_bal.write(row_num + 1, 0, index, text_fmt)
+            for col_num, (col_name, value) in enumerate(row.items()):
+                c_name = str(col_name).lower()
+                fmt = pct_1dec_fmt if ('%' in c_name or 'av_' in c_name) else money_fmt
+                ws_bal.write(row_num + 1, col_num + 1, value, fmt)
+        
+        ws_bal.set_column('A:A', 40)
+        ws_bal.set_column('B:Z', 18)
 
-            worksheet.set_column('A:A', 40, text_format)
-            
-            for i, col in enumerate(df.columns):
-                col_idx = i + 1 
-                col_name = str(col).lower()
-                if any(x in col_name for x in ['%', 'margen', 'roa', 'roe', 'crecimiento', 'var_%']):
-                    worksheet.set_column(col_idx, col_idx, 15, pct_format)
-                elif 'días' in col_name or 'dias' in col_name:
-                     worksheet.set_column(col_idx, col_idx, 15, num_format)
-                else:
-                    worksheet.set_column(col_idx, col_idx, 18, num_format)
-
-        # 2. Escribir Resultados e Indicadores
+        # --- 2. HOJA RESULTADOS (NUEVO ORDEN) ---
         sheet_pyg = 'Resultados_e_Indicadores'
-        worksheet_pyg = workbook.add_worksheet(sheet_pyg)
-        writer.sheets[sheet_pyg] = worksheet_pyg
+        ws_pyg = workbook.add_worksheet(sheet_pyg)
+        writer.sheets[sheet_pyg] = ws_pyg
+        ws_pyg.hide_gridlines(2)
         
-        start_row = 0
-        worksheet_pyg.write(start_row, 0, "ESTADO DE RESULTADOS", header_format)
-        
-        worksheet_pyg.write(start_row + 1, 0, "Cuenta", header_format)
+        current_row = 0
+        ws_pyg.write(current_row, 0, "ESTADO DE RESULTADOS", header_fmt)
+        current_row += 1
+        ws_pyg.write(current_row, 0, "Cuenta", header_fmt)
         for col_num, value in enumerate(df_pyg.columns.values):
-            worksheet_pyg.write(start_row + 1, col_num + 1, value, header_format)
+            ws_pyg.write(current_row, col_num + 1, value, header_fmt)
         
+        current_row += 1
         for row_num, (index, row) in enumerate(df_pyg.iterrows()):
-            worksheet_pyg.write(start_row + 2 + row_num, 0, index, text_format)
+            ws_pyg.write(current_row + row_num, 0, index, text_fmt)
             for col_num, value in enumerate(row):
-                worksheet_pyg.write(start_row + 2 + row_num, col_num + 1, value, num_format)
+                ws_pyg.write(current_row + row_num, col_num + 1, value, money_fmt)
         
-        start_row_ind = start_row + len(df_pyg) + 5
-        worksheet_pyg.write(start_row_ind, 0, "INDICADORES P&G", header_format)
-        
-        worksheet_pyg.write(start_row_ind + 1, 0, "Indicador", header_format)
+        current_row += len(df_pyg) + 3
+        ws_pyg.write(current_row, 0, "INDICADORES P&G", header_fmt)
+        current_row += 1
+        ws_pyg.write(current_row, 0, "Indicador", header_fmt)
         for col_num, value in enumerate(df_indicadores.columns.values):
-            worksheet_pyg.write(start_row_ind + 1, col_num + 1, value, header_format)
+            ws_pyg.write(current_row, col_num + 1, value, header_fmt)
             
+        current_row += 1
         for row_num, (index, row) in enumerate(df_indicadores.iterrows()):
-            worksheet_pyg.write(start_row_ind + 2 + row_num, 0, index, text_format)
+            ws_pyg.write(current_row + row_num, 0, index, text_fmt)
             for col_num, value in enumerate(row):
-                worksheet_pyg.write(start_row_ind + 2 + row_num, col_num + 1, value, pct_format)
+                ws_pyg.write(current_row + row_num, col_num + 1, value, pct_1dec_fmt)
                 
-        worksheet_pyg.set_column('A:A', 40, text_format)
-        worksheet_pyg.set_column('B:Z', 18)
+        ws_pyg.set_column('A:A', 40)
+        ws_pyg.set_column('B:Z', 18)
 
-        # 3. Hoja de Gráficos (MODIFICADA)
-        worksheet_g = workbook.add_worksheet("DASHBOARD_GRAFICO")
-        worksheet_g.hide_gridlines(2)
+        # --- 3. HOJA RATIOS (NUEVO ORDEN Y FORMATOS) ---
+        sheet_ratios = 'Ratios_Financieros'
+        ws_rat = workbook.add_worksheet(sheet_ratios)
+        writer.sheets[sheet_ratios] = ws_rat
+        ws_rat.hide_gridlines(2)
         
-        # Título combinado para evitar compresión (A1:J1)
-        worksheet_g.merge_range('A1:J1', "DASHBOARD EJECUTIVO - GRÁFICOS", header_format)
+        ws_rat.write(0, 0, "Ratio Financiero", header_fmt)
+        for col_num, value in enumerate(df_ratios.columns.values):
+            ws_rat.write(0, col_num + 1, value, header_fmt)
+            
+        for row_num, (index, row) in enumerate(df_ratios.iterrows()):
+            ws_rat.write(row_num + 1, 0, index, text_fmt)
+            idx_str = str(index).lower()
+            if 'días' in idx_str or 'dias' in idx_str:
+                row_fmt = int_fmt
+            elif any(x in idx_str for x in ['margen', 'roa', 'roe']):
+                row_fmt = pct_0dec_fmt
+            else:
+                row_fmt = float_1dec_fmt
+            
+            for col_num, value in enumerate(row):
+                ws_rat.write(row_num + 1, col_num + 1, value, row_fmt)
+                
+        ws_rat.set_column('A:A', 40)
+        ws_rat.set_column('B:Z', 15)
+
+        # --- 4. HOJA DASHBOARD ---
+        ws_dash = workbook.add_worksheet("DASHBOARD_GRAFICO")
+        ws_dash.hide_gridlines(2)
+        ws_dash.merge_range('A1:J1', "DASHBOARD EJECUTIVO - GRÁFICOS", header_fmt)
+        ws_dash.merge_range('A2:J2', "Nota: Estos gráficos son imágenes estáticas. Puede seleccionarlos, moverlos y cambiar su tamaño a gusto.", note_fmt)
         
-        # Nota aclaratoria (A2:J2)
-        worksheet_g.merge_range('A2:J2', "Nota: Estos gráficos son imágenes estáticas. Puede seleccionarlos, moverlos y cambiar su tamaño a gusto.", note_format)
-        
-        row_pos = 3 # Empezar un poco más abajo (fila 4)
+        row_pos = 3
         for key, fig in figs.items():
             img_bytes = fig.to_image(format="png", width=1000, height=500, scale=2)
             image_data = io.BytesIO(img_bytes)
-            worksheet_g.insert_image(row_pos, 1, key, {'image_data': image_data, 'x_scale': 0.8, 'y_scale': 0.8})
-            row_pos += 35 # Aumentado de 25 a 35 para dar más espacio vertical
+            # ESCALA REDUCIDA A LA MITAD (0.4)
+            ws_dash.insert_image(row_pos, 1, key, {'image_data': image_data, 'x_scale': 0.4, 'y_scale': 0.4})
+            row_pos += 18 # Menos espacio entre gráficos al ser más pequeños
 
     return output.getvalue()
 
