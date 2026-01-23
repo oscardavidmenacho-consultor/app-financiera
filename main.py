@@ -467,51 +467,57 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         workbook = writer.book
         
         # --- ESTILOS EXCEL ---
-        # 1. Cabecera (Azul Oscuro, Blanco, Centrado, Negrita)
+        # Cabecera
         header_fmt = workbook.add_format({
             'bold': True, 'text_wrap': True, 'valign': 'vcenter', 'fg_color': '#004c70', 
             'font_color': 'white', 'border': 1, 'align': 'center'
         })
-        # 2. Subtotales (Azul Claro, Negro, Negrita) - Ej: Activo Corriente
-        subtotal_fmt = workbook.add_format({
-            'bold': True, 'bg_color': '#dce6f1', 'border': 1, 'align': 'left'
-        })
-        subtotal_num_fmt = workbook.add_format({
-            'bold': True, 'bg_color': '#dce6f1', 'border': 1, 'num_format': '#,##0'
-        })
-        # 3. Totales Mayores (Azul Oscuro, Blanco, Negrita) - Ej: ACTIVOS TOTALES
-        total_fmt = workbook.add_format({
-            'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'border': 1, 'align': 'left'
-        })
-        total_num_fmt = workbook.add_format({
-            'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'border': 1, 'num_format': '#,##0'
-        })
         
-        # 4. Texto Normal (Izquierda, sin negrita)
-        text_fmt = workbook.add_format({'border': 1, 'align': 'left', 'bold': False})
+        # Subtotales (Azul Claro) - SIN bordes internos
+        subtotal_fmt = workbook.add_format({'bold': True, 'bg_color': '#dce6f1', 'align': 'left'})
+        subtotal_num_fmt = workbook.add_format({'bold': True, 'bg_color': '#dce6f1', 'num_format': '#,##0'})
+        subtotal_pct_fmt = workbook.add_format({'bold': True, 'bg_color': '#dce6f1', 'num_format': '0.0%'})
         
-        # Formatos Numéricos Base
-        money_fmt = workbook.add_format({'num_format': '#,##0', 'border': 1})
-        int_fmt = workbook.add_format({'num_format': '0', 'border': 1})
-        pct_1dec_fmt = workbook.add_format({'num_format': '0.0%', 'border': 1})
-        pct_0dec_fmt = workbook.add_format({'num_format': '0%', 'border': 1})
-        float_1dec_fmt = workbook.add_format({'num_format': '0.0', 'border': 1})
+        # Totales Mayores (Azul Oscuro) - SIN bordes internos
+        total_fmt = workbook.add_format({'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'align': 'left'})
+        total_num_fmt = workbook.add_format({'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'num_format': '#,##0'})
+        total_pct_fmt = workbook.add_format({'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'num_format': '0.0%'})
+        
+        # Texto Normal - SIN bordes
+        text_fmt = workbook.add_format({'align': 'left'})
+        
+        # Formatos Numéricos - SIN bordes
+        money_fmt = workbook.add_format({'num_format': '#,##0'})
+        int_fmt = workbook.add_format({'num_format': '0'})
+        pct_1dec_fmt = workbook.add_format({'num_format': '0.0%'})
+        pct_0dec_fmt = workbook.add_format({'num_format': '0%'})
+        float_1dec_fmt = workbook.add_format({'num_format': '0.0'})
         note_fmt = workbook.add_format({'italic': True, 'font_color': 'gray', 'align': 'left'})
         
-        # Listas para identificar filas especiales
+        # --- FORMATOS ESPECIALES PARA BORDE DERECHO (BALANCE) ---
+        # Se aplican a la columna D (índice 3 en datos, 4 en excel)
+        # Necesitamos versiones con borde derecho de todos los formatos base
+        
+        def add_right_border(base_format_props):
+            props = base_format_props.copy()
+            props['right'] = 1
+            return workbook.add_format(props)
+
+        # Diccionarios de propiedades para clonar
+        p_money = {'num_format': '#,##0'}
+        p_subtotal_num = {'bold': True, 'bg_color': '#dce6f1', 'num_format': '#,##0'}
+        p_total_num = {'bold': True, 'bg_color': '#004c70', 'font_color': 'white', 'num_format': '#,##0'}
+        
+        # Formatos con borde derecho
+        money_right_fmt = add_right_border(p_money)
+        subtotal_num_right_fmt = add_right_border(p_subtotal_num)
+        total_num_right_fmt = add_right_border(p_total_num)
+
+        # Listas de filas especiales
         filas_total_mayor = ['ACTIVOS TOTALES', 'PASIVOS TOTALES', 'PATRIMONIO TOTAL', 'TOTAL PASIVO Y PATRIMONIO', 'RESULTADO DEL EJERCICIO']
         filas_subtotal = ['Activo Corriente', 'Activo No Corriente', 'Pasivo Corriente', 'Pasivo No Corriente', 
                           'RESULTADO BRUTO', 'EBITDA', 'RESULTADO OPERATIVO', 'RESULTADO OPERATIVO (EBIT / UAII)', 
                           'RESULTADO ANTES DEL IMPUESTO']
-
-        def get_formats(idx_name):
-            idx_name = str(idx_name).strip()
-            # Detección flexible
-            if any(x in idx_name for x in filas_total_mayor):
-                return total_fmt, total_num_fmt
-            elif any(x in idx_name for x in filas_subtotal):
-                return subtotal_fmt, subtotal_num_fmt
-            return text_fmt, money_fmt
 
         # --- 1. HOJA BALANCE ---
         sheet_bal = 'Balance_Analizado'
@@ -524,32 +530,51 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
             ws_bal.write(0, col_num + 1, value, header_fmt)
             
         for row_num, (index, row) in enumerate(df_balance.iterrows()):
-            # Obtener formato según si es Total/Subtotal/Normal
-            lbl_fmt, num_base_fmt = get_formats(index)
+            idx_name = str(index).strip()
+            # Determinar tipo de fila
+            if any(x in idx_name for x in filas_total_mayor):
+                lbl_fmt = total_fmt
+                base_num = total_num_fmt
+                base_pct = total_pct_fmt
+                # Especial para borde derecho
+                curr_right_fmt = total_num_right_fmt
+            elif any(x in idx_name for x in filas_subtotal):
+                lbl_fmt = subtotal_fmt
+                base_num = subtotal_num_fmt
+                base_pct = subtotal_pct_fmt
+                curr_right_fmt = subtotal_num_right_fmt
+            else:
+                lbl_fmt = text_fmt
+                base_num = money_fmt
+                base_pct = pct_1dec_fmt
+                curr_right_fmt = money_right_fmt
+
             ws_bal.write(row_num + 1, 0, index, lbl_fmt)
             
             for col_num, (col_name, value) in enumerate(row.items()):
                 c_name = str(col_name).lower()
-                # Determinar si es %, moneda o número base
-                if '%' in c_name or 'av_' in c_name or 'vertical' in c_name or 'horizontal_%' in c_name:
-                    # Si es fila especial, mantener fondo pero cambiar num_format a %
-                    final_fmt = workbook.add_format({'border': 1, 'num_format': '0.0%'})
-                    if lbl_fmt == total_fmt:
-                        final_fmt.set_bg_color('#004c70')
-                        final_fmt.set_font_color('white')
-                        final_fmt.set_bold(True)
-                    elif lbl_fmt == subtotal_fmt:
-                        final_fmt.set_bg_color('#dce6f1')
-                        final_fmt.set_bold(True)
-                    ws_bal.write(row_num + 1, col_num + 1, value, final_fmt)
-                else:
-                    # Usar el formato numérico base (que ya tiene el color de fondo correcto)
-                    ws_bal.write(row_num + 1, col_num + 1, value, num_base_fmt)
-        
-        ws_bal.set_column('A:A', 40)
-        ws_bal.set_column('B:Z', 18)
+                
+                # Determinar si es Columna con Borde Derecho (La 3ra columna de datos, índice 2 en enumerate si A=0? No, pandas items. Col 0=2023, 1=2024, 2=2025)
+                # Ojo: df_balance tiene columnas: [2023, 2024, 2025, Vertical%, Horiz$, Horiz%]
+                # Queremos borde derecho en '2025' (index 2)
+                
+                is_right_border_col = (col_num == 2) 
 
-        # --- 2. HOJA RESULTADOS (NUEVO ORDEN) ---
+                if '%' in c_name or 'av_' in c_name or 'vertical' in c_name or 'horizontal_%' in c_name:
+                    ws_bal.write(row_num + 1, col_num + 1, value, base_pct)
+                else:
+                    # Es número normal (dinero)
+                    if is_right_border_col:
+                        ws_bal.write(row_num + 1, col_num + 1, value, curr_right_fmt)
+                    else:
+                        ws_bal.write(row_num + 1, col_num + 1, value, base_num)
+        
+        # Ajuste Anchos
+        ws_bal.set_column('A:A', 40)
+        ws_bal.set_column('B:D', 14) # Ajuste 1
+        ws_bal.set_column('E:G', 10) # Ajuste 2
+
+        # --- 2. HOJA RESULTADOS ---
         sheet_pyg = 'Resultados_e_Indicadores'
         ws_pyg = workbook.add_worksheet(sheet_pyg)
         writer.sheets[sheet_pyg] = ws_pyg
@@ -564,13 +589,24 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         
         current_row += 1
         for row_num, (index, row) in enumerate(df_pyg.iterrows()):
-            lbl_fmt, num_base_fmt = get_formats(index)
-            ws_pyg.write(current_row + row_num, 0, index, lbl_fmt)
+            idx_name = str(index).strip()
+            if any(x in idx_name for x in filas_total_mayor):
+                lbl = total_fmt
+                num = total_num_fmt
+            elif any(x in idx_name for x in filas_subtotal):
+                lbl = subtotal_fmt
+                num = subtotal_num_fmt
+            else:
+                lbl = text_fmt
+                num = money_fmt
+                
+            ws_pyg.write(current_row + row_num, 0, index, lbl)
             for col_num, value in enumerate(row):
-                ws_pyg.write(current_row + row_num, col_num + 1, value, num_base_fmt)
+                ws_pyg.write(current_row + row_num, col_num + 1, value, num)
         
         current_row += len(df_pyg) + 3
-        ws_pyg.merge_range(current_row, 0, current_row, len(df_indicadores.columns), "INDICADORES P&G", header_fmt)
+        # CAMBIO NOMBRE TITULO EXCEL
+        ws_pyg.merge_range(current_row, 0, current_row, len(df_indicadores.columns), "Análisis combinado (vertical/horizontal) P&G", header_fmt)
         current_row += 1
         ws_pyg.write(current_row, 0, "Indicador", header_fmt)
         for col_num, value in enumerate(df_indicadores.columns.values):
@@ -582,10 +618,11 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
             for col_num, value in enumerate(row):
                 ws_pyg.write(current_row + row_num, col_num + 1, value, pct_1dec_fmt)
                 
+        # Ajuste Anchos
         ws_pyg.set_column('A:A', 40)
-        ws_pyg.set_column('B:Z', 18)
+        ws_pyg.set_column('B:D', 14) # Ajuste 1
 
-        # --- 3. HOJA RATIOS (NUEVO ORDEN Y FORMATOS) ---
+        # --- 3. HOJA RATIOS ---
         sheet_ratios = 'Ratios_Financieros'
         ws_rat = workbook.add_worksheet(sheet_ratios)
         writer.sheets[sheet_ratios] = ws_rat
@@ -608,9 +645,11 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
             for col_num, value in enumerate(row):
                 ws_rat.write(row_num + 1, col_num + 1, value, row_fmt)
         
-        # --- TABLA DE FÓRMULAS ---
-        row_formulas = len(df_ratios) + 4
-        ws_rat.merge_range(row_formulas, 0, row_formulas, 1, "GUÍA DE FÓRMULAS UTILIZADAS", header_fmt)
+        # --- TABLA DE FÓRMULAS (LATERAL G1) ---
+        # Ajuste 4: Empezar en G1 (Columna 6, Fila 0)
+        start_col_form = 6 
+        ws_rat.merge_range(0, start_col_form, 0, start_col_form + 1, "GUÍA DE FÓRMULAS UTILIZADAS", header_fmt)
+        
         formulas = [
             ("Liquidez Corriente", "Activo Corriente / Pasivo Corriente"),
             ("Prueba Ácida", "(Activo Corriente - Inventario) / Pasivo Corriente"),
@@ -627,17 +666,19 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
             ("Márgenes (Bruto/Op/Neto)", "Resultado Correspondiente / Ventas")
         ]
         
-        row_formulas += 1
-        ws_rat.write(row_formulas, 0, "Ratio", header_fmt)
-        ws_rat.write(row_formulas, 1, "Fórmula de Cálculo", header_fmt)
+        ws_rat.write(1, start_col_form, "Ratio", header_fmt)
+        ws_rat.write(1, start_col_form + 1, "Fórmula de Cálculo", header_fmt)
         
         for i, (ratio, formula) in enumerate(formulas):
-            ws_rat.write(row_formulas + 1 + i, 0, ratio, text_fmt)
-            ws_rat.write(row_formulas + 1 + i, 1, formula, text_fmt)
+            ws_rat.write(2 + i, start_col_form, ratio, text_fmt)
+            ws_rat.write(2 + i, start_col_form + 1, formula, text_fmt)
 
+        # Ajuste Anchos
         ws_rat.set_column('A:A', 40)
-        ws_rat.set_column('B:B', 50) # Ancho extra para fórmulas
-        ws_rat.set_column('C:Z', 15)
+        ws_rat.set_column('B:D', 10) # Ajuste 3
+        ws_rat.set_column('E:F', 2) # Espacio vacio
+        ws_rat.set_column('G:G', 30) # Formula Ratio Name
+        ws_rat.set_column('H:H', 50) # Formula Text
 
         # --- 4. HOJA DASHBOARD ---
         ws_dash = workbook.add_worksheet("DASHBOARD_GRAFICO")
@@ -752,13 +793,12 @@ if uploaded_file is not None:
             st.subheader("Estado de Resultados Original")
             st.dataframe(aplicar_estilos_df(df_pyg_orig, 'balance'), use_container_width=True)
             st.divider()
-            st.subheader("Indicadores P&G")
-            # APLICAMOS ESTILO ESPECÍFICO PARA INDICADORES (TODO %)
+            # CAMBIO NOMBRE SUBTITULO INTERFAZ
+            st.subheader("Análisis combinado (vertical/horizontal) P&G")
             st.dataframe(aplicar_estilos_df(df_ind_pyg, 'indicadores'), use_container_width=True)
             
         with tab3:
             st.header("Ratios Financieros Clave")
-            # APLICAMOS ESTILO ESPECÍFICO PARA RATIOS (FILA por FILA)
             st.dataframe(aplicar_estilos_df(df_ratios, 'ratios'), use_container_width=True)
             
         with tab4:
