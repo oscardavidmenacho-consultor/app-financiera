@@ -18,7 +18,6 @@ st.markdown("""
     }
     
     /* --- CORRECCIÓN DE TÍTULOS Y SUBTÍTULOS (H2, H3, H4) --- */
-    /* Esto hace que "Análisis del Balance", "Ratios", etc. sean siempre oscuros */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
@@ -170,7 +169,7 @@ def procesar_balance(df_balance):
     
     total_assets_last_year = encontrar_cuenta(df, ["ACTIVOS TOTALES"])[last_year]
     
-    # CAMBIO: Renombrado a Vertical_%
+    # Columnas renombradas
     if total_assets_last_year != 0:
         df[f'Vertical_%_{last_year}'] = (df[last_year] / total_assets_last_year)
     else:
@@ -184,7 +183,7 @@ def procesar_balance(df_balance):
     elif len(years) > 1 and activos_totales_row.get(years[1], 0) > 0:
         base_year = years[1]
 
-    # CAMBIO: Renombrado a Horizontal_$ y Horizontal_%
+    # Columnas renombradas
     if base_year and base_year != last_year:
         df[f'Horizontal_$ ({last_year} vs {base_year})'] = df[last_year] - df[base_year]
         numerador = df[last_year] - df[base_year]
@@ -484,6 +483,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         num_format = workbook.add_format({'num_format': '#,##0', 'border': 1})
         pct_format = workbook.add_format({'num_format': '0.0%', 'border': 1})
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
+        note_format = workbook.add_format({'italic': True, 'font_color': 'gray', 'align': 'left'})
         
         sheets = {
             'Balance_Analizado': df_balance,
@@ -543,17 +543,22 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         worksheet_pyg.set_column('A:A', 40, text_format)
         worksheet_pyg.set_column('B:Z', 18)
 
-        # 3. Hoja de Gráficos
+        # 3. Hoja de Gráficos (MODIFICADA)
         worksheet_g = workbook.add_worksheet("DASHBOARD_GRAFICO")
         worksheet_g.hide_gridlines(2)
-        worksheet_g.write(0, 0, "DASHBOARD EJECUTIVO - GRÁFICOS", header_format)
         
-        row_pos = 2
+        # Título combinado para evitar compresión (A1:J1)
+        worksheet_g.merge_range('A1:J1', "DASHBOARD EJECUTIVO - GRÁFICOS", header_format)
+        
+        # Nota aclaratoria (A2:J2)
+        worksheet_g.merge_range('A2:J2', "Nota: Estos gráficos son imágenes estáticas. Puede seleccionarlos, moverlos y cambiar su tamaño a gusto.", note_format)
+        
+        row_pos = 3 # Empezar un poco más abajo (fila 4)
         for key, fig in figs.items():
             img_bytes = fig.to_image(format="png", width=1000, height=500, scale=2)
             image_data = io.BytesIO(img_bytes)
             worksheet_g.insert_image(row_pos, 1, key, {'image_data': image_data, 'x_scale': 0.8, 'y_scale': 0.8})
-            row_pos += 25
+            row_pos += 35 # Aumentado de 25 a 35 para dar más espacio vertical
 
     return output.getvalue()
 
