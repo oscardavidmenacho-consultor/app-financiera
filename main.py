@@ -17,11 +17,17 @@ st.markdown("""
         background-color: #f9f9f9; 
     }
     
+    /* --- CORRECCIÓN DE TÍTULOS Y SUBTÍTULOS (H2, H3, H4) --- */
+    /* Esto hace que "Análisis del Balance", "Ratios", etc. sean siempre oscuros */
+    h2, h3, h4, h5, h6 {
+        color: #333333 !important;
+    }
+    
     /* --- CORRECCIÓN PESTAÑAS (TABS) --- */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
-        color: #444444 !important; /* Gris oscuro forzado */
+        color: #444444 !important;
     }
     
     /* Botones personalizados */
@@ -112,9 +118,11 @@ def aplicar_estilos_df(df, tipo='balance'):
     else: 
         for col in df_visual.columns:
             col_lower = str(col).lower()
-            if any(x in col_lower for x in ['%', 'var_%', 'av_']):
+            # Detectamos % (incluye 'Vertical_%' y 'Horizontal_%')
+            if '%' in col_lower or 'av_' in col_lower: 
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, es_porcentaje=True, decimales=1))
             else:
+                # Dinero (incluye 'Horizontal_$')
                 df_visual[col] = df_visual[col].apply(lambda x: formato_latino(x, decimales=0))
             
     # Estilizado de Pandas
@@ -162,10 +170,11 @@ def procesar_balance(df_balance):
     
     total_assets_last_year = encontrar_cuenta(df, ["ACTIVOS TOTALES"])[last_year]
     
+    # CAMBIO: Renombrado a Vertical_%
     if total_assets_last_year != 0:
-        df[f'AV_%_{last_year}'] = (df[last_year] / total_assets_last_year)
+        df[f'Vertical_%_{last_year}'] = (df[last_year] / total_assets_last_year)
     else:
-        df[f'AV_%_{last_year}'] = 0
+        df[f'Vertical_%_{last_year}'] = 0
             
     base_year = None
     activos_totales_row = encontrar_cuenta(df, ["ACTIVOS TOTALES"])
@@ -175,14 +184,15 @@ def procesar_balance(df_balance):
     elif len(years) > 1 and activos_totales_row.get(years[1], 0) > 0:
         base_year = years[1]
 
+    # CAMBIO: Renombrado a Horizontal_$ y Horizontal_%
     if base_year and base_year != last_year:
-        df[f'Var_$ ({last_year} vs {base_year})'] = df[last_year] - df[base_year]
+        df[f'Horizontal_$ ({last_year} vs {base_year})'] = df[last_year] - df[base_year]
         numerador = df[last_year] - df[base_year]
         denominador = df[base_year]
-        df[f'Var_% ({last_year} vs {base_year})'] = (numerador / denominador.replace(0, np.nan)).fillna(0)
+        df[f'Horizontal_% ({last_year} vs {base_year})'] = (numerador / denominador.replace(0, np.nan)).fillna(0)
     else:
-        df['Var_$'] = 0
-        df['Var_%'] = 0
+        df['Horizontal_$'] = 0
+        df['Horizontal_%'] = 0
         
     return df
 
@@ -272,7 +282,7 @@ def calcular_ratios(df_balance, df_pyg):
         
     return ratios.astype(float).fillna(0)
 
-# --- CREAR FIGURAS DASHBOARD (CORREGIDO MODO OSCURO) ---
+# --- CREAR FIGURAS DASHBOARD ---
 def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     F_DATA = 16  
     F_AXIS = 16  
@@ -296,11 +306,11 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
             fig.update_yaxes(range=[0, max_y_val * 1.15]) 
             
         fig.update_layout(
-            template='plotly_white', # <--- SOLUCIÓN: FORZAR TEMA CLARO EN GRAFICOS
-            title=dict(text=title_text, font=dict(size=F_TITLE, color="black")), # Forzar titulo negro
+            template='plotly_white', 
+            title=dict(text=title_text, font=dict(size=F_TITLE, color="black")), 
             barmode='group',
-            legend=dict(font=dict(size=F_LEG, color="black"), orientation="v", yanchor="top", y=1, xanchor="left", x=1.02), # Forzar leyenda negra
-            font=dict(size=14, color="black"), # Forzar todo el texto base negro
+            legend=dict(font=dict(size=F_LEG, color="black"), orientation="v", yanchor="top", y=1, xanchor="left", x=1.02), 
+            font=dict(size=14, color="black"), 
             margin=dict(l=50, r=20, t=80, b=40),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
