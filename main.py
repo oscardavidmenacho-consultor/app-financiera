@@ -2,7 +2,6 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import io
-import urllib.parse
 from datetime import datetime
 import plotly.graph_objects as go
 import os
@@ -13,15 +12,9 @@ st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon=
 # --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
 st.markdown("""
 <style>
-    /* Forzar fondo claro en la APP principal */
+    /* Forzar fondo claro */
     .stApp {
         background-color: #f9f9f9; 
-    }
-    
-    /* --- CORRECCIÓN BARRA LATERAL (SIDEBAR) --- */
-    /* Forzamos que el fondo de la barra lateral sea SIEMPRE claro para que el texto negro se lea */
-    section[data-testid="stSidebar"] {
-        background-color: #f0f2f6;
     }
     
     /* --- CORRECCIÓN DE TÍTULOS Y SUBTÍTULOS --- */
@@ -382,7 +375,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
+    # 5. Grandes Grupos del Balance
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -568,13 +561,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
                 is_right_border_col = (col_num == 2) 
 
                 if '%' in c_name or 'av_' in c_name or 'vertical' in c_name or 'horizontal_%' in c_name:
-                    # Si es fila especial, mantener fondo pero cambiar num_format a %
-                    final_fmt = workbook.add_format({'num_format': '0.0%'}) # base
-                    if lbl_fmt == total_fmt:
-                        final_fmt = total_pct_fmt
-                    elif lbl_fmt == subtotal_fmt:
-                        final_fmt = subtotal_pct_fmt
-                    ws_bal.write(row_num + 1, col_num + 1, value, final_fmt)
+                    ws_bal.write(row_num + 1, col_num + 1, value, base_pct)
                 else:
                     # Es número normal (dinero)
                     if is_right_border_col:
@@ -587,7 +574,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         ws_bal.set_column('B:D', 14) # Ajuste 1
         ws_bal.set_column('E:G', 10) # Ajuste 2
 
-        # --- 2. HOJA RESULTADOS (NUEVO ORDEN) ---
+        # --- 2. HOJA RESULTADOS ---
         sheet_pyg = 'Resultados_e_Indicadores'
         ws_pyg = workbook.add_worksheet(sheet_pyg)
         writer.sheets[sheet_pyg] = ws_pyg
@@ -635,7 +622,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         ws_pyg.set_column('A:A', 40)
         ws_pyg.set_column('B:D', 14) # Ajuste 1
 
-        # --- 3. HOJA RATIOS (NUEVO ORDEN Y FORMATOS) ---
+        # --- 3. HOJA RATIOS ---
         sheet_ratios = 'Ratios_Financieros'
         ws_rat = workbook.add_worksheet(sheet_ratios)
         writer.sheets[sheet_ratios] = ws_rat
@@ -764,42 +751,103 @@ with st.sidebar:
         </div>
     </a>
     """, unsafe_allow_html=True)
-    
-    # --- FEEDBACK FORM (V51) ---
-    # COMENTARIO CORREGIDO: Se mueve al main body, no aqui. (Error en V51, corrección en V52 aplicada abajo)
 
-# Mover feedback form al main body (fuera del sidebar) para V52
-if uploaded_file is None:
+if uploaded_file is not None:
+    try:
+        xls = pd.ExcelFile(uploaded_file)
+        nombres_pestanas = xls.sheet_names
+        nombre_balance = encontrar_nombre_pestana(nombres_pestanas, 'balance')
+        nombre_pyg = encontrar_nombre_pestana(nombres_pestanas, 'resultado')
+
+        if not nombre_balance or not nombre_pyg:
+            st.error("Error: Formato incorrecto.")
+            st.stop()
+
+        df_bal = pd.read_excel(xls, sheet_name=nombre_balance, header=1, index_col=0).dropna(how='all').dropna(how='all', axis=1)
+        df_pyg_orig = pd.read_excel(xls, sheet_name=nombre_pyg, header=1, index_col=0).dropna(how='all').dropna(how='all', axis=1)
+
+        df_bal = clean_column_headers(df_bal)
+        df_pyg_orig = clean_column_headers(df_pyg_orig)
+        for df in [df_bal, df_pyg_orig]:
+            df.index.name = 'Cuenta'
+            for col in df.columns: 
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+            df.fillna(0, inplace=True)
+        
+        df_bal_an = procesar_balance(df_bal)
+        df_ind_pyg = procesar_pyg(df_pyg_orig)
+        df_ratios = calcular_ratios(df_bal, df_pyg_orig)
+        
+        figs = crear_figuras_dashboard(df_bal, df_pyg_orig, df_ind_pyg, df_ratios)
+        excel_data = to_excel(df_bal_an, df_pyg_orig, df_ind_pyg, df_ratios, figs)
+
+        # --- SECCIÓN DE PESTAÑAS ---
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Balance", "📈 P&G", "🔢 Ratios", "🖼️ DASHBOARD"])
+
+        with tab1:
+            st.header("Análisis del Balance General")
+            st.dataframe(aplicar_estilos_df(df_bal_an, 'balance'), use_container_width=True)
+            
+        with tab2:
+            st.header("Análisis del Estado de Resultados (P&G)")
+            st.subheader("Estado de Resultados Original")
+            st.dataframe(aplicar_estilos_df(df_pyg_orig, 'balance'), use_container_width=True)
+            st.divider()
+            # CAMBIO NOMBRE SUBTITULO INTERFAZ
+            st.subheader("Análisis combinado (vertical/horizontal) P&G")
+            st.dataframe(aplicar_estilos_df(df_ind_pyg, 'indicadores'), use_container_width=True)
+            
+        with tab3:
+            st.header("Ratios Financieros Clave")
+            st.dataframe(aplicar_estilos_df(df_ratios, 'ratios'), use_container_width=True)
+            
+        with tab4:
+            st.header("Dashboard Gráfico Interactivo")
+            
+            # FILA 1
+            col1, _, col2 = st.columns([1, 0.1, 1])
+            with col1: st.plotly_chart(figs['Estructura'], use_container_width=True)
+            with col2: st.plotly_chart(figs['Cascada'], use_container_width=True)
+            st.divider()
+            
+            # FILA 2
+            col3, _, col4 = st.columns([1, 0.1, 1])
+            with col3: st.plotly_chart(figs['Ventas'], use_container_width=True)
+            with col4: st.plotly_chart(figs['CapitalTrabajo'], use_container_width=True)
+            st.divider()
+
+            # FILA 3 (Grandes Grupos - FULL WIDTH)
+            st.plotly_chart(figs['GrandesGrupos'], use_container_width=True)
+            st.divider()
+            
+            # FILA 4
+            col5, _, col6 = st.columns([1, 0.1, 1])
+            with col5: st.plotly_chart(figs['Liquidez'], use_container_width=True)
+            with col6: st.plotly_chart(figs['Rentabilidad'], use_container_width=True)
+            st.divider()
+            
+            # FILA 5
+            col7, _, col8 = st.columns([1, 0.1, 1])
+            with col7: st.plotly_chart(figs['Margenes'], use_container_width=True)
+            with col8: st.plotly_chart(figs['Actividad'], use_container_width=True)
+        
+        # --- BOTÓN DE DESCARGA PRINCIPAL ---
+        st.divider()
+        st.write("### 📥 Descarga tu Informe")
+        st.download_button(
+            label="DESCARGAR REPORTE EXCEL COMPLETO",
+            data=excel_data,
+            file_name=f"Reporte_Financiero_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            type="primary", 
+            use_container_width=True
+        )
+
+    except Exception as e:
+        st.error(f"Error técnico: {e}")
+else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
     Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
-
-# ... (Resto del código de procesamiento) ...
-
-# AL FINAL DEL SCRIPT, FUERA DEL SIDEBAR Y DEL IF PRINCIPAL (O DENTRO SI SE PREFIERE SOLO AL CARGAR)
-# Para que aparezca siempre, lo ponemos al final:
-
-st.divider()
-with st.expander("💬 ¿Tienes comentarios o sugerencias? Escríbenos aquí"):
-    feedback = st.text_area("Tu opinión nos ayuda a mejorar:", placeholder="Escribe aquí...")
-    if feedback:
-        body_email = feedback.replace('\n', '%0A')
-        body_encoded = urllib.parse.quote(body_email)
-        st.markdown(f'''
-            <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" target="_blank" class="custom-btn">
-                <div style="
-                    background-color: #28a745; 
-                    color: white; 
-                    padding: 10px; 
-                    text-align: center; 
-                    border-radius: 5px; 
-                    font-weight: bold;
-                    margin-top: 10px;
-                    width: 200px;
-                ">
-                    ✉️ Enviar Comentario
-                </div>
-            </a>
-        ''', unsafe_allow_html=True)
