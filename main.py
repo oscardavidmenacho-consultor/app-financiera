@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import io
+import urllib.parse
 from datetime import datetime
 import plotly.graph_objects as go
 import os
@@ -375,7 +376,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance
+    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -561,7 +562,13 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
                 is_right_border_col = (col_num == 2) 
 
                 if '%' in c_name or 'av_' in c_name or 'vertical' in c_name or 'horizontal_%' in c_name:
-                    ws_bal.write(row_num + 1, col_num + 1, value, base_pct)
+                    # Si es fila especial, mantener fondo pero cambiar num_format a %
+                    final_fmt = workbook.add_format({'num_format': '0.0%'}) # base
+                    if lbl_fmt == total_fmt:
+                        final_fmt = total_pct_fmt
+                    elif lbl_fmt == subtotal_fmt:
+                        final_fmt = subtotal_pct_fmt
+                    ws_bal.write(row_num + 1, col_num + 1, value, final_fmt)
                 else:
                     # Es número normal (dinero)
                     if is_right_border_col:
@@ -574,7 +581,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         ws_bal.set_column('B:D', 14) # Ajuste 1
         ws_bal.set_column('E:G', 10) # Ajuste 2
 
-        # --- 2. HOJA RESULTADOS ---
+        # --- 2. HOJA RESULTADOS (NUEVO ORDEN) ---
         sheet_pyg = 'Resultados_e_Indicadores'
         ws_pyg = workbook.add_worksheet(sheet_pyg)
         writer.sheets[sheet_pyg] = ws_pyg
@@ -622,7 +629,7 @@ def to_excel(df_balance, df_pyg, df_indicadores, df_ratios, figs):
         ws_pyg.set_column('A:A', 40)
         ws_pyg.set_column('B:D', 14) # Ajuste 1
 
-        # --- 3. HOJA RATIOS ---
+        # --- 3. HOJA RATIOS (NUEVO ORDEN Y FORMATOS) ---
         sheet_ratios = 'Ratios_Financieros'
         ws_rat = workbook.add_worksheet(sheet_ratios)
         writer.sheets[sheet_ratios] = ws_rat
@@ -751,6 +758,32 @@ with st.sidebar:
         </div>
     </a>
     """, unsafe_allow_html=True)
+    
+    # --- FEEDBACK FORM (V51) ---
+    st.divider()
+    st.subheader("💬 Tu opinión nos ayuda")
+    feedback = st.text_area("¿Sugerencias o errores?", placeholder="Escribe aquí tus comentarios...")
+    if feedback:
+        # Preparamos el link mailto con el cuerpo del mensaje
+        body_email = feedback.replace('\n', '%0A')
+        # Usamos urllib para codificar caracteres especiales
+        body_encoded = urllib.parse.quote(body_email)
+        
+        st.markdown(f'''
+            <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" target="_blank" class="custom-btn">
+                <div style="
+                    background-color: #28a745; 
+                    color: white; 
+                    padding: 10px; 
+                    text-align: center; 
+                    border-radius: 5px; 
+                    font-weight: bold;
+                    margin-top: 10px;
+                ">
+                    ✉️ Enviar comentarios por Correo
+                </div>
+            </a>
+        ''', unsafe_allow_html=True)
 
 if uploaded_file is not None:
     try:
