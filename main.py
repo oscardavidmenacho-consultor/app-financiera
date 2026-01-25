@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V57 QUIRÚRGICO) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V59) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL */
@@ -18,13 +18,23 @@ st.markdown("""
         background-color: #f9f9f9; 
     }
     
-    /* 2. BARRA LATERAL (SIDEBAR) - FONDO */
+    /* 2. BARRA LATERAL (SIDEBAR) - FONDO CLARO */
     section[data-testid="stSidebar"] {
         background-color: #f0f2f6 !important;
     }
     
-    /* 3. ELEMENTOS ESPECÍFICOS DEL SIDEBAR QUE DEBEN SER NEGROS */
-    /* Títulos, etiquetas, textos normales y nombres de archivo cargados */
+    /* 3. ARREGLO DE LA FLECHA (SOLUCIÓN V59: COMODÍN) */
+    /* Seleccionamos el botón y CUALQUIER COSA (*) que esté dentro de él */
+    button[data-testid="stSidebarCollapseButton"],
+    button[data-testid="stSidebarCollapseButton"] *,
+    button[data-testid="stSidebarExpandButton"],
+    button[data-testid="stSidebarExpandButton"] * {
+        fill: #333333 !important;   /* Relleno del icono */
+        color: #333333 !important;  /* Color del texto/icono */
+        stroke: #333333 !important; /* Trazo del icono */
+    }
+    
+    /* 4. TEXTOS DEL SIDEBAR EN NEGRO */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3,
@@ -35,26 +45,18 @@ st.markdown("""
         color: #333333 !important;
     }
     
-    /* Iconos generales del sidebar (flecha colapsar, X de cerrar archivo) en negro */
+    /* Otros Iconos generales del sidebar */
     section[data-testid="stSidebar"] svg {
         fill: #333333 !important;
-        color: #333333 !important;
-    }
-    
-    /* Flecha flotante para cerrar/abrir sidebar */
-    button[data-testid="stSidebarCollapseButton"] svg,
-    button[data-testid="stSidebarExpandButton"] svg {
-        fill: #333333 !important;
-        color: #333333 !important;
     }
 
-    /* 4. CORRECCIÓN IMPORTANTE: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
-    /* Forzamos que el texto DENTRO de tus botones personalizados sea BLANCO */
+    /* 5. EXCEPCIÓN: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
+    /* Revertimos el color a BLANCO solo para el texto dentro de tus botones */
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
     }
 
-    /* 5. CAJA DE COMENTARIOS (EXPANDER) - Título Negro */
+    /* 6. CAJA DE COMENTARIOS (EXPANDER) */
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary svg {
@@ -62,7 +64,7 @@ st.markdown("""
         fill: #333333 !important;
     }
 
-    /* 6. ESTILOS GENERALES (Tablas, Títulos principales, etc.) */
+    /* 7. ESTILOS GENERALES */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
