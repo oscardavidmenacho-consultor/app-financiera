@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V61 DEFINITIVO) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V62) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL */
@@ -23,46 +23,53 @@ st.markdown("""
         background-color: #f0f2f6 !important;
     }
     
-    /* 3. ARREGLO DE FLECHAS (COLLAPSE Y EXPAND) */
-    /* Apuntamos a los dos botones posibles (dentro y fuera del sidebar) */
-    [data-testid="stSidebarCollapseButton"] > svg,
-    [data-testid="stSidebarExpandButton"] > svg {
-        fill: #333333 !important;   /* Forzar relleno negro */
-        stroke: #333333 !important; /* Forzar línea negra */
+    /* 3. TEXTOS GENERALES DEL SIDEBAR EN NEGRO */
+    /* Títulos, párrafos, etiquetas fuera de cajas */
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] li,
+    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
         color: #333333 !important;
     }
-    /* Refuerzo para el "camino" (path) interno del icono */
+
+    /* 4. CORRECCIÓN CAJA DE CARGA (FILE UPLOADER) */
+    /* El texto "Drag and drop", "Limit 200MB" y el botón "Browse" deben ser BLANCOS */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] small,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] span,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        color: white !important;
+    }
+    /* El nombre del archivo cargado (debajo de la caja) sí lo queremos oscuro */
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"] {
+        color: #333333 !important;
+    }
+
+    /* 5. CORRECCIÓN BOTÓN DESCARGAR PLANTILLA (Estándar de Streamlit) */
+    section[data-testid="stSidebar"] .stDownloadButton button {
+        color: white !important;
+    }
+
+    /* 6. CORRECCIÓN BOTONES PERSONALIZADOS (HOTMART/BENTO) */
+    section[data-testid="stSidebar"] a.custom-btn div {
+        color: white !important;
+    }
+
+    /* 7. ARREGLO DE FLECHAS (COLLAPSE/EXPAND) - MANTENIDO */
+    [data-testid="stSidebarCollapseButton"] > svg,
+    [data-testid="stSidebarExpandButton"] > svg {
+        fill: #333333 !important;
+        stroke: #333333 !important;
+        color: #333333 !important;
+    }
     [data-testid="stSidebarCollapseButton"] > svg > path,
     [data-testid="stSidebarExpandButton"] > svg > path {
         fill: #333333 !important;
         stroke: #333333 !important;
     }
 
-    /* 4. TEXTOS DEL SIDEBAR EN NEGRO (Excluyendo botones personalizados) */
-    section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] span,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"],
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
-        color: #333333 !important;
-    }
-    
-    /* Títulos del sidebar */
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3 {
-        color: #333333 !important;
-    }
-
-    /* 5. EXCEPCIÓN CRÍTICA: BOTONES HOTMART/BENTO/MAIL */
-    /* Estos botones tienen la clase .custom-btn. Forzamos su texto a BLANCO */
-    section[data-testid="stSidebar"] a.custom-btn div,
-    a.custom-btn div {
-        color: white !important; /* Texto blanco */
-        -webkit-text-fill-color: white !important; /* Asegurar en webkit */
-    }
-
-    /* 6. CAJA DE COMENTARIOS (EXPANDER) */
+    /* 8. CAJA DE COMENTARIOS (EXPANDER) */
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary svg {
@@ -70,28 +77,25 @@ st.markdown("""
         fill: #333333 !important;
     }
 
-    /* 7. ESTILOS GENERALES (Títulos principales, pestañas, tablas) */
-    h1, h2, h3, h4, h5, h6 {
+    /* 9. ESTILOS GENERALES RESTANTES */
+    h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
-    /* Excepción para el Título Principal Azul */
+    /* Título principal azul */
     h1 {
         color: #004c70 !important;
     }
-    
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
         color: #444444 !important;
     }
-    
     a.custom-btn {
         text-decoration: none !important;
     }
     a.custom-btn:hover {
         opacity: 0.9;
     }
-    
     .stDataFrame {
         font-size: 1.3rem !important;
     }
@@ -115,7 +119,6 @@ st.markdown("""
 col_ban1, col_ban2 = st.columns([2, 1], gap="large")
 
 with col_ban1:
-    # Usamos HTML directo para asegurar control total sobre el título principal
     st.markdown('<h1 style="color:#004c70 !important; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
     st.markdown('<p style="color:#333333; font-weight:400; font-size: 1.5rem; line-height: 1.4; margin-bottom: 15px;">Automatiza los cálculos y enfócate en el diagnóstico. Tendencias + Ratios + Dashboard en segundos.</p>', unsafe_allow_html=True)
     st.markdown('<p style="color:#333333; font-weight:500; font-size: 1.4rem;">Oscar Menacho | Consultor y Docente Financiero</p>', unsafe_allow_html=True)
