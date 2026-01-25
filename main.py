@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V59) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V60) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL */
@@ -23,15 +23,11 @@ st.markdown("""
         background-color: #f0f2f6 !important;
     }
     
-    /* 3. ARREGLO DE LA FLECHA (SOLUCIÓN V59: COMODÍN) */
-    /* Seleccionamos el botón y CUALQUIER COSA (*) que esté dentro de él */
-    button[data-testid="stSidebarCollapseButton"],
-    button[data-testid="stSidebarCollapseButton"] *,
-    button[data-testid="stSidebarExpandButton"],
-    button[data-testid="stSidebarExpandButton"] * {
-        fill: #333333 !important;   /* Relleno del icono */
-        color: #333333 !important;  /* Color del texto/icono */
-        stroke: #333333 !important; /* Trazo del icono */
+    /* 3. ARREGLO DE LA FLECHA (SOLUCIÓN V60: EL TRUCO DEL BRILLO) */
+    /* No importan los colores, forzamos brillo 0 (Negro Absoluto) a los iconos */
+    [data-testid="stSidebarCollapseButton"] > svg,
+    [data-testid="stSidebarExpandButton"] > svg {
+        filter: brightness(0) !important;
     }
     
     /* 4. TEXTOS DEL SIDEBAR EN NEGRO */
@@ -45,15 +41,16 @@ st.markdown("""
         color: #333333 !important;
     }
     
-    /* Otros Iconos generales del sidebar */
+    /* Iconos generales (como la X para cerrar archivo) */
     section[data-testid="stSidebar"] svg {
-        fill: #333333 !important;
+        filter: brightness(0) !important;
     }
 
     /* 5. EXCEPCIÓN: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
-    /* Revertimos el color a BLANCO solo para el texto dentro de tus botones */
+    /* Revertimos el filtro y forzamos blanco para los botones */
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
+        filter: none !important; /* Evitar que se vuelvan negros */
     }
 
     /* 6. CAJA DE COMENTARIOS (EXPANDER) */
