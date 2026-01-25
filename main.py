@@ -19,11 +19,26 @@ st.markdown("""
     }
     
     /* --- CORRECCIÓN BARRA LATERAL (SIDEBAR) --- */
-    /* Forzamos fondo claro para que el texto negro se lea en modo oscuro */
     section[data-testid="stSidebar"] {
         background-color: #f0f2f6;
     }
     
+    /* SOLUCIÓN PUNTOS 1 y 2: Forzar textos oscuros en Sidebar (Labels y Archivos) */
+    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"],
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
+        color: #333333 !important;
+    }
+    
+    /* SOLUCIÓN PUNTO 3: Forzar texto oscuro en el Título del Expander (Caja de comentarios) */
+    div[data-testid="stExpander"] details summary p {
+        color: #333333 !important;
+        font-weight: 600;
+    }
+    div[data-testid="stExpander"] details summary svg {
+        fill: #333333 !important; /* También la flechita del expander */
+    }
+
     /* --- CORRECCIÓN DE TÍTULOS Y SUBTÍTULOS --- */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
@@ -382,7 +397,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance
+    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -806,6 +821,7 @@ if uploaded_file is not None:
             st.subheader("Estado de Resultados Original")
             st.dataframe(aplicar_estilos_df(df_pyg_orig, 'balance'), use_container_width=True)
             st.divider()
+            # CAMBIO NOMBRE SUBTITULO INTERFAZ
             st.subheader("Análisis combinado (vertical/horizontal) P&G")
             st.dataframe(aplicar_estilos_df(df_ind_pyg, 'indicadores'), use_container_width=True)
             
