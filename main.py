@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V62) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V63) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL */
@@ -23,50 +23,60 @@ st.markdown("""
         background-color: #f0f2f6 !important;
     }
     
-    /* 3. TEXTOS GENERALES DEL SIDEBAR EN NEGRO */
-    /* Títulos, párrafos, etiquetas fuera de cajas */
+    /* 3. ARREGLO DE FLECHAS (SOLUCIÓN V63: REDUNDANCIA TOTAL) */
+    /* Forzamos el color gris oscuro en todos los niveles del icono */
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="stSidebarExpandButton"] svg,
+    [data-testid="stSidebarCollapseButton"] svg path,
+    [data-testid="stSidebarExpandButton"] svg path {
+        fill: #333333 !important;
+        stroke: #333333 !important;
+        color: #333333 !important;
+    }
+
+    /* 4. TEXTOS DEL SIDEBAR EN NEGRO (General) */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3,
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] li,
-    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p {
+    section[data-testid="stSidebar"] label {
         color: #333333 !important;
     }
-
-    /* 4. CORRECCIÓN CAJA DE CARGA (FILE UPLOADER) */
-    /* El texto "Drag and drop", "Limit 200MB" y el botón "Browse" deben ser BLANCOS */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] small,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] span,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        color: white !important;
-    }
-    /* El nombre del archivo cargado (debajo de la caja) sí lo queremos oscuro */
+    /* Nombre del archivo cargado debajo de la caja */
     section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"] {
         color: #333333 !important;
     }
 
-    /* 5. CORRECCIÓN BOTÓN DESCARGAR PLANTILLA (Estándar de Streamlit) */
-    section[data-testid="stSidebar"] .stDownloadButton button {
+    /* 5. CORRECCIÓN: BOTÓN DESCARGAR PLANTILLA (Streamlit) */
+    /* Fondo oscuro, texto blanco */
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
+        background-color: #333333 !important;
+        color: white !important;
+        border-color: #333333 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button:hover {
+        background-color: #555555 !important;
+        color: white !important;
+    }
+    /* Asegurar que el texto interno (p) sea blanco */
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
         color: white !important;
     }
 
-    /* 6. CORRECCIÓN BOTONES PERSONALIZADOS (HOTMART/BENTO) */
+    /* 6. CORRECCIÓN: CAJA DE CARGA (FILE UPLOADER) */
+    /* Textos internos de la caja negra deben ser blancos */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] small,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] span {
+        color: white !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        color: white !important; /* Botón Browse */
+    }
+
+    /* 7. CORRECCIÓN: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
-    }
-
-    /* 7. ARREGLO DE FLECHAS (COLLAPSE/EXPAND) - MANTENIDO */
-    [data-testid="stSidebarCollapseButton"] > svg,
-    [data-testid="stSidebarExpandButton"] > svg {
-        fill: #333333 !important;
-        stroke: #333333 !important;
-        color: #333333 !important;
-    }
-    [data-testid="stSidebarCollapseButton"] > svg > path,
-    [data-testid="stSidebarExpandButton"] > svg > path {
-        fill: #333333 !important;
-        stroke: #333333 !important;
     }
 
     /* 8. CAJA DE COMENTARIOS (EXPANDER) */
@@ -77,7 +87,7 @@ st.markdown("""
         fill: #333333 !important;
     }
 
-    /* 9. ESTILOS GENERALES RESTANTES */
+    /* 9. ESTILOS GENERALES (Títulos principales, pestañas) */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
