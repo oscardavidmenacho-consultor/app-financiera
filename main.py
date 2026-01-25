@@ -29,6 +29,14 @@ st.markdown("""
     section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
         color: #333333 !important;
     }
+
+    /* --- CORRECCIÓN FLECHA SIDEBAR (V55) --- */
+    /* Forzar color oscuro en el icono de colapsar/expandir la barra lateral */
+    button[data-testid="stSidebarCollapseButton"] svg,
+    button[data-testid="stSidebarExpandButton"] svg {
+        fill: #333333 !important;
+        color: #333333 !important;
+    }
     
     /* SOLUCIÓN PUNTO 3: Forzar texto oscuro en el Título del Expander (Caja de comentarios) */
     div[data-testid="stExpander"] details summary p {
@@ -397,7 +405,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
+    # 5. Grandes Grupos del Balance
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
