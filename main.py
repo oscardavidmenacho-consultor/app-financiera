@@ -10,64 +10,70 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V56 DEFINITIVO) ---
 st.markdown("""
 <style>
-    /* Forzar fondo claro en la APP principal */
+    /* 1. FONDO APP PRINCIPAL (Siempre Claro) */
     .stApp {
         background-color: #f9f9f9; 
     }
     
-    /* --- CORRECCIÓN BARRA LATERAL (SIDEBAR) --- */
+    /* 2. BARRA LATERAL (SIDEBAR) - SOLUCIÓN TOTAL */
+    /* Forzamos fondo claro */
     section[data-testid="stSidebar"] {
-        background-color: #f0f2f6;
+        background-color: #f0f2f6 !important;
     }
     
-    /* SOLUCIÓN PUNTOS 1 y 2: Forzar textos oscuros en Sidebar (Labels y Archivos) */
-    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"],
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
+    /* REGLA DE ORO: Todo texto dentro del Sidebar debe ser NEGRO (#333) */
+    /* Esto arregla: "Sube tu archivo", Nombre del archivo, Peso en KB, y cualquier label */
+    section[data-testid="stSidebar"] * {
         color: #333333 !important;
     }
-
-    /* --- CORRECCIÓN FLECHA SIDEBAR (V55) --- */
-    /* Forzar color oscuro en el icono de colapsar/expandir la barra lateral */
+    
+    /* REGLA DE ORO: Todo icono (SVG) dentro del Sidebar debe ser NEGRO */
+    /* Esto arregla: La flecha de colapsar/expandir, la X para cerrar archivo, etc. */
+    section[data-testid="stSidebar"] svg {
+        fill: #333333 !important;
+        color: #333333 !important;
+    }
+    
+    /* Aseguramos la flecha flotante de colapsar (cuando el sidebar está abierto) */
     button[data-testid="stSidebarCollapseButton"] svg,
     button[data-testid="stSidebarExpandButton"] svg {
         fill: #333333 !important;
         color: #333333 !important;
     }
-    
-    /* SOLUCIÓN PUNTO 3: Forzar texto oscuro en el Título del Expander (Caja de comentarios) */
-    div[data-testid="stExpander"] details summary p {
+
+    /* 3. CAJA DE COMENTARIOS (EXPANDER) */
+    /* Forzamos que el título del expander y su flechita sean negros */
+    div[data-testid="stExpander"] summary,
+    div[data-testid="stExpander"] summary span,
+    div[data-testid="stExpander"] summary p,
+    div[data-testid="stExpander"] summary svg {
         color: #333333 !important;
+        fill: #333333 !important;
         font-weight: 600;
     }
-    div[data-testid="stExpander"] details summary svg {
-        fill: #333333 !important; /* También la flechita del expander */
-    }
 
-    /* --- CORRECCIÓN DE TÍTULOS Y SUBTÍTULOS --- */
+    /* 4. TÍTULOS PRINCIPALES */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
     
-    /* --- CORRECCIÓN PESTAÑAS (TABS) --- */
+    /* 5. PESTAÑAS (TABS) */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
         color: #444444 !important;
     }
     
-    /* Botones personalizados */
+    /* 6. BOTONES PERSONALIZADOS Y TABLAS */
     a.custom-btn {
         text-decoration: none !important;
     }
     a.custom-btn:hover {
         opacity: 0.9;
     }
-    
-    /* Tablas y Textos */
     .stDataFrame {
         font-size: 1.3rem !important;
     }
@@ -80,7 +86,6 @@ st.markdown("""
         color: white;
         font-size: 1.2rem !important;
     }
-    /* Ajuste márgenes títulos markdown */
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
         padding-top: 0px !important;
