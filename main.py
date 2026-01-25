@@ -10,64 +10,67 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V56 DEFINITIVO) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V57 QUIRÚRGICO) ---
 st.markdown("""
 <style>
-    /* 1. FONDO APP PRINCIPAL (Siempre Claro) */
+    /* 1. FONDO APP PRINCIPAL */
     .stApp {
         background-color: #f9f9f9; 
     }
     
-    /* 2. BARRA LATERAL (SIDEBAR) - SOLUCIÓN TOTAL */
-    /* Forzamos fondo claro */
+    /* 2. BARRA LATERAL (SIDEBAR) - FONDO */
     section[data-testid="stSidebar"] {
         background-color: #f0f2f6 !important;
     }
     
-    /* REGLA DE ORO: Todo texto dentro del Sidebar debe ser NEGRO (#333) */
-    /* Esto arregla: "Sube tu archivo", Nombre del archivo, Peso en KB, y cualquier label */
-    section[data-testid="stSidebar"] * {
+    /* 3. ELEMENTOS ESPECÍFICOS DEL SIDEBAR QUE DEBEN SER NEGROS */
+    /* Títulos, etiquetas, textos normales y nombres de archivo cargados */
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] .stMarkdown p,
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"],
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
         color: #333333 !important;
     }
     
-    /* REGLA DE ORO: Todo icono (SVG) dentro del Sidebar debe ser NEGRO */
-    /* Esto arregla: La flecha de colapsar/expandir, la X para cerrar archivo, etc. */
+    /* Iconos generales del sidebar (flecha colapsar, X de cerrar archivo) en negro */
     section[data-testid="stSidebar"] svg {
         fill: #333333 !important;
         color: #333333 !important;
     }
     
-    /* Aseguramos la flecha flotante de colapsar (cuando el sidebar está abierto) */
+    /* Flecha flotante para cerrar/abrir sidebar */
     button[data-testid="stSidebarCollapseButton"] svg,
     button[data-testid="stSidebarExpandButton"] svg {
         fill: #333333 !important;
         color: #333333 !important;
     }
 
-    /* 3. CAJA DE COMENTARIOS (EXPANDER) */
-    /* Forzamos que el título del expander y su flechita sean negros */
-    div[data-testid="stExpander"] summary,
-    div[data-testid="stExpander"] summary span,
+    /* 4. CORRECCIÓN IMPORTANTE: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
+    /* Forzamos que el texto DENTRO de tus botones personalizados sea BLANCO */
+    section[data-testid="stSidebar"] a.custom-btn div {
+        color: white !important;
+    }
+
+    /* 5. CAJA DE COMENTARIOS (EXPANDER) - Título Negro */
     div[data-testid="stExpander"] summary p,
+    div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary svg {
         color: #333333 !important;
         fill: #333333 !important;
-        font-weight: 600;
     }
 
-    /* 4. TÍTULOS PRINCIPALES */
+    /* 6. ESTILOS GENERALES (Tablas, Títulos principales, etc.) */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
-    
-    /* 5. PESTAÑAS (TABS) */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
         color: #444444 !important;
     }
-    
-    /* 6. BOTONES PERSONALIZADOS Y TABLAS */
     a.custom-btn {
         text-decoration: none !important;
     }
