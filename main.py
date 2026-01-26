@@ -10,90 +10,85 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V64 FINAL) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V65 DARK SIDEBAR) ---
 st.markdown("""
 <style>
-    /* 1. FONDO APP PRINCIPAL */
+    /* 1. FONDO APP PRINCIPAL (Área de trabajo) - CLARO */
     .stApp {
         background-color: #f9f9f9; 
     }
     
-    /* 2. BARRA LATERAL (SIDEBAR) - FONDO CLARO */
+    /* 2. BARRA LATERAL (SIDEBAR) - AZUL CORPORATIVO */
     section[data-testid="stSidebar"] {
-        background-color: #f0f2f6 !important;
+        background-color: #004c70 !important;
     }
     
-    /* 3. ARREGLO DE FLECHAS (SOLUCIÓN V64: INVERSIÓN) */
-    /* Invertimos el color del icono. Si Streamlit lo pone Blanco (Dark Mode), esto lo vuelve NEGRO. */
-    button[data-testid="stSidebarCollapseButton"] > svg,
-    button[data-testid="stSidebarExpandButton"] > svg {
-        filter: invert(1) !important;
-    }
-
-    /* 4. TEXTOS DEL SIDEBAR QUE DEBEN SER NEGROS */
+    /* 3. TEXTOS DEL SIDEBAR -> BLANCO */
+    /* Al ser el fondo oscuro, forzamos todo el texto a blanco */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] li,
     section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] .stMarkdown p,
-    section[data-testid="stSidebar"] li {
-        color: #333333 !important;
+    section[data-testid="stSidebar"] div,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] small {
+        color: white !important;
     }
-    
-    /* Arreglo específico para el nombre del archivo cargado (que se veía borroso) */
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"] {
-        color: #333333 !important;
+
+    /* 4. ICONOS Y FLECHAS DEL SIDEBAR -> BLANCO */
+    /* Esto arregla la flecha rebelde: Blanco sobre Azul = VISIBLE */
+    section[data-testid="stSidebar"] svg,
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="stSidebarExpandButton"] svg {
+        fill: white !important;
+        stroke: white !important;
+        color: white !important;
     }
-    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
-        color: #333333 !important;
+    /* Aseguramos el trazo interno */
+    [data-testid="stSidebarCollapseButton"] svg path,
+    [data-testid="stSidebarExpandButton"] svg path {
+        fill: white !important;
+        stroke: white !important;
     }
-    /* La X para eliminar archivo */
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDeleteBtn"] svg {
+
+    /* 5. CAJA DE CARGA (FILE UPLOADER) */
+    /* Ajustamos el botón "Browse" para que se vea bien */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        background-color: #f9f9f9 !important;
+        color: #004c70 !important; /* Texto azul para contraste */
+        border: none !important;
+    }
+
+    /* 6. BOTÓN DESCARGAR PLANTILLA */
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
+        background-color: #f9f9f9 !important;
+        color: #004c70 !important;
+        border: 1px solid white !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button:hover {
+        background-color: #e0e0e0 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
+        color: #004c70 !important;
+    }
+
+    /* 7. CAJA DE COMENTARIOS (EXPANDER - ÁREA PRINCIPAL) */
+    /* Como está en el área blanca, debe ser oscuro */
+    div[data-testid="stExpander"] summary p,
+    div[data-testid="stExpander"] summary span,
+    div[data-testid="stExpander"] summary svg {
+        color: #333333 !important;
         fill: #333333 !important;
     }
 
-    /* 5. EXCEPCIONES: ELEMENTOS QUE DEBEN SER BLANCOS */
-    
-    /* A) Textos DENTRO de la caja de carga (Drag and drop) */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] small,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] span {
-        color: white !important;
-    }
-    /* Botón "Browse" dentro del uploader */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        color: white !important;
-    }
-
-    /* B) Botón Descargar Plantilla (Streamlit Standard) */
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
-        color: white !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
-        color: white !important;
-    }
-
-    /* C) Tus Botones Personalizados (Hotmart/Bento) */
-    section[data-testid="stSidebar"] a.custom-btn div {
-        color: white !important;
-    }
-
-    /* 6. CAJA DE COMENTARIOS (EXPANDER) */
-    div[data-testid="stExpander"] summary p,
-    div[data-testid="stExpander"] summary span {
+    /* 8. ESTILOS GENERALES (ÁREA PRINCIPAL) */
+    /* Títulos del contenido principal en gris oscuro */
+    div[data-testid="stVerticalBlock"] > div > h2,
+    div[data-testid="stVerticalBlock"] > div > h3,
+    div[data-testid="stVerticalBlock"] > div > h4 {
         color: #333333 !important;
-        font-weight: 600;
-    }
-    div[data-testid="stExpander"] summary svg {
-        filter: invert(1) !important; /* Invertimos también la flechita del expander */
-    }
-
-    /* 7. ESTILOS GENERALES DE LA APP */
-    h2, h3, h4, h5, h6 {
-        color: #333333 !important;
-    }
-    /* Título principal (H1) en Azul */
-    h1 {
-        color: #004c70 !important;
     }
     
     /* Pestañas */
@@ -103,20 +98,22 @@ st.markdown("""
         color: #444444 !important;
     }
     
+    /* Botones Custom */
+    a.custom-btn { text-decoration: none !important; }
+    a.custom-btn:hover { opacity: 0.9; }
+    
     /* Tablas */
-    .stDataFrame {
-        font-size: 1.3rem !important;
-    }
+    .stDataFrame { font-size: 1.3rem !important; }
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
         background-color: #004c70;
         color: white;
         font-size: 1.2rem !important;
     }
     
-    /* Ajustes varios */
-    a.custom-btn { text-decoration: none !important; }
-    a.custom-btn:hover { opacity: 0.9; }
-    .stAlert p { font-size: 1.2rem !important; line-height: 1.5 !important; }
+    /* Título H1 Principal (Excepción para que sea Azul) */
+    h1 { color: #004c70 !important; }
+    
+    /* Ajuste márgenes */
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
         padding-top: 0px !important;
@@ -784,7 +781,7 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN HOTMART ---
+    # --- BOTÓN HOTMART (CON BORDE BLANCO V65) ---
     st.markdown("""
     <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn">
         <div style="
@@ -798,6 +795,7 @@ with st.sidebar:
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
+            border: 1px solid white; /* Borde para resaltar sobre fondo azul */
         ">
             🔥 Curso Especializado: Análisis y Proyección de EEFF - 25% OFF
         </div>
