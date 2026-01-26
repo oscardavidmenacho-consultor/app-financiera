@@ -924,8 +924,8 @@ else:
 
 # --- FEEDBACK FORM (V52/V53) ---
 st.divider()
-with st.expander("💬 ¿Tienes comentarios o sugerencias? Escríbenos aquí"):
-    feedback = st.text_area("Tu opinión nos ayuda a mejorar:", placeholder="Escribe aquí...")
+with st.expander("💬 ¿Tienes comentarios o sugerencias? Escríbeme aquí"):
+    feedback = st.text_area("Tu opinión ayuda a mejorar la herramienta:", placeholder="Escribe aquí...")
     if feedback:
         body_email = feedback.replace('\n', '%0A')
         body_encoded = urllib.parse.quote(body_email)
