@@ -10,20 +10,21 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V66 FINAL) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V67 FINAL) ---
 st.markdown("""
 <style>
-    /* 1. FONDO APP PRINCIPAL (Área de trabajo) - CLARO */
+    /* 1. FONDO APP PRINCIPAL (Siempre claro) */
     .stApp {
         background-color: #f9f9f9; 
     }
     
-    /* 2. BARRA LATERAL (SIDEBAR) - AZUL CORPORATIVO */
-    section[data-testid="stSidebar"] {
+    /* 2. BARRA LATERAL (SIDEBAR) - FUERZA AZUL CORPORATIVO */
+    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] > div {
         background-color: #004c70 !important;
     }
     
-    /* 3. TEXTOS DEL SIDEBAR -> BLANCO */
+    /* 3. TEXTOS DEL SIDEBAR -> SIEMPRE BLANCO (Para contraste con azul) */
     section[data-testid="stSidebar"] * {
         color: white !important;
     }
@@ -42,8 +43,8 @@ st.markdown("""
         stroke: white !important;
     }
 
-    /* 5. CORRECCIONES ESPECÍFICAS EN SIDEBAR (Para que se vean bien sobre azul) */
-    /* Botón "Browse" de la caja de carga */
+    /* 5. ARREGLOS ESPECÍFICOS SIDEBAR */
+    /* Botón Browse del Uploader */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
         background-color: #f9f9f9 !important;
         color: #004c70 !important;
@@ -59,55 +60,63 @@ st.markdown("""
         color: #004c70 !important;
     }
 
-    /* 6. CORRECCIÓN ÁREA DE COMENTARIOS (El problema de la caja negra) */
-    /* Forzamos que el Expander y el Text Area sean BLANCOS con texto NEGRO */
-    
-    /* Cabecera del Expander */
-    div[data-testid="stExpander"] summary {
-        background-color: #ffffff !important;
+    /* 6. CORRECCIÓN ALERTAS (INFO/WARNING/ERROR) - SOLUCIÓN TEXTO INVISIBLE */
+    /* Forzamos que el texto dentro de las cajas de colores sea SIEMPRE NEGRO */
+    div[data-testid="stAlert"] {
         color: #333333 !important;
-        border: 1px solid #ddd !important;
     }
-    div[data-testid="stExpander"] summary p, 
+    div[data-testid="stAlert"] p, 
+    div[data-testid="stAlert"] li,
+    div[data-testid="stAlert"] div {
+        color: #333333 !important;
+    }
+    /* Iconos de las alertas (la manito, el triangulo) en negro */
+    div[data-testid="stAlert"] svg {
+        fill: #333333 !important;
+        color: #333333 !important;
+    }
+
+    /* 7. CAJA DE COMENTARIOS (TEXT AREA Y EXPANDER) */
+    /* Título del Expander */
+    div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span {
         color: #333333 !important;
+        font-weight: 600;
     }
     div[data-testid="stExpander"] summary svg {
-        fill: #333333 !important;
+        fill: #333333 !important; /* Flechita negra */
     }
     
-    /* Cuerpo del Expander */
-    div[data-testid="stExpander"] {
-        background-color: #ffffff !important;
-        color: #333333 !important;
-    }
-    
-    /* Caja de Texto (Text Area) */
+    /* El área de texto donde se escribe */
     .stTextArea textarea {
         background-color: #ffffff !important;
         color: #333333 !important;
-        border: 1px solid #ccc !important;
+        border: 1px solid #cccccc !important;
     }
+    /* El texto "Escribe tu sugerencia aquí" (Label) */
     .stTextArea label p {
-        color: #333333 !important; /* Etiqueta del input */
-    }
-
-    /* 7. ESTILOS GENERALES (ÁREA PRINCIPAL) */
-    h1, h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
-    h1 { color: #004c70 !important; } /* Título principal azul */
+    /* El texto de marcador de posición (Placeholder) "Tu opinión ayuda..." */
+    .stTextArea textarea::placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
     
-    /* Pestañas */
+    /* 8. OCULTAR INSTRUCCIÓN "PRESS CTRL+ENTER" */
+    div[data-testid="stInputInstructions"] {
+        display: none !important;
+    }
+
+    /* 9. ESTILOS GENERALES (Títulos, Pestañas, Tablas) */
+    h1 { color: #004c70 !important; }
+    h2, h3, h4, h5, h6 { color: #333333 !important; }
+    
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
         color: #444444 !important;
     }
-    
-    /* Botones Custom */
-    a.custom-btn { text-decoration: none !important; }
-    a.custom-btn:hover { opacity: 0.9; }
     
     /* Tablas */
     .stDataFrame { font-size: 1.3rem !important; }
@@ -116,6 +125,9 @@ st.markdown("""
         color: white;
         font-size: 1.2rem !important;
     }
+    
+    a.custom-btn { text-decoration: none !important; }
+    a.custom-btn:hover { opacity: 0.9; }
     
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
@@ -441,7 +453,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
+    # 5. Grandes Grupos del Balance
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -798,7 +810,6 @@ with st.sidebar:
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
-            border: 1px solid white; /* Borde para resaltar sobre fondo azul */
         ">
             🔥 Curso Especializado: Análisis y Proyección de EEFF - 25% OFF
         </div>
@@ -925,7 +936,7 @@ else:
     Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
 
-# --- FEEDBACK FORM MEJORADO (V66) ---
+# --- FEEDBACK FORM MEJORADO (V66/V67) ---
 st.divider()
 st.subheader("💬 ¿Tienes comentarios?")
 
@@ -938,12 +949,11 @@ if submit_button and feedback_text:
     body_email = feedback_text.replace('\n', '%0A')
     body_encoded = urllib.parse.quote(body_email)
     
-    # MENSAJE DE ÉXITO Y BOTÓN REAL
     st.success("¡Texto guardado! Pulsa el botón negro para abrir tu correo:")
     
-    # EL LINK YA NO TIENE TARGET="_BLANK" PARA EVITAR PANTALLA BLANCA
+    # EL LINK TIENE TARGET="_TOP" PARA EVITAR PANTALLA BLANCA Y NOTA DE AYUDA
     st.markdown(f'''
-        <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" class="custom-btn">
+        <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" target="_top" class="custom-btn">
             <div style="
                 background-color: #333333; 
                 color: white; 
@@ -958,6 +968,9 @@ if submit_button and feedback_text:
                 ✉️ ENVIAR AHORA (Click Aquí)
             </div>
         </a>
+        <p style="font-size: 12px; color: #666; margin-top: 5px;">
+           Nota: Si no se abre tu correo, envía tu mensaje a: <b>oscar.david.menacho@gmail.com</b>
+        </p>
     ''', unsafe_allow_html=True)
 elif submit_button and not feedback_text:
     st.warning("⚠️ Por favor escribe algo antes de preparar el envío.")
