@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V69 FINALÍSIMO) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V70 FINAL) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL (Siempre claro) */
@@ -52,7 +52,7 @@ st.markdown("""
     }
 
     /* 5. ARREGLO CAJA DE CARGA (FILE UPLOADER) */
-    /* Zona de drop */
+    /* Zona de drop oscura */
     [data-testid="stFileUploaderDropzone"] {
         background-color: #333333 !important;
         border: 1px dashed white !important;
@@ -63,31 +63,30 @@ st.markdown("""
         color: #333333 !important;
         border: none !important;
     }
-    
-    /* --- NUEVO V69: ARREGLO VISIBILIDAD ARCHIVO CARGADO Y 'X' --- */
-    /* Nombre del archivo y peso (Ej: Estados Financieros.xlsx 38.9KB) */
+    /* Visibilidad de archivo cargado y X */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderFileName"],
     section[data-testid="stSidebar"] [data-testid="stFileUploaderFileStatus"] {
         color: white !important;
     }
-    /* Icono 'X' para eliminar */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDeleteBtn"] svg {
         fill: white !important;
         stroke: white !important;
         color: white !important;
     }
 
-    /* 6. ARREGLO ALERTAS (WARNING/INFO) EN SIDEBAR */
-    section[data-testid="stSidebar"] .stAlert {
-        background-color: #ffeba0 !important; /* Fondo amarillo claro */
+    /* 6. SOLUCIÓN GLOBAL ALERTAS (WARNING/INFO) - TEXTO NEGRO SIEMPRE */
+    /* Esto arregla el mensaje amarillo invisible en modo oscuro */
+    div[data-testid="stAlert"] {
+        color: #333333 !important; 
+    }
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] div,
+    div[data-testid="stAlert"] li {
         color: #333333 !important;
     }
-    section[data-testid="stSidebar"] .stAlert p,
-    section[data-testid="stSidebar"] .stAlert div {
-        color: #333333 !important; /* Texto negro */
-    }
-    section[data-testid="stSidebar"] .stAlert svg {
-        fill: #333333 !important;
+    /* Alertas específicas del sidebar (fondo amarillo/azul claro) */
+    section[data-testid="stSidebar"] .stAlert {
+        background-color: #ffeba0 !important;
     }
 
     /* 7. BOTÓN DESCARGAR PLANTILLA */
@@ -100,30 +99,31 @@ st.markdown("""
         color: #004c70 !important;
     }
 
-    /* 8. BOTONES PERSONALIZADOS (HOTMART/BENTO) - V69 DIFERENCIADOS */
+    /* 8. BOTONES PERSONALIZADOS (HOTMART/BENTO) - ESPACIADO Y BORDES */
     a.custom-btn {
         text-decoration: none !important;
         display: block !important;
         border-radius: 10px !important;
-        overflow: hidden !important;
+        overflow: visible !important; /* Evita que se corte la sombra */
+        box-sizing: border-box !important;
     }
     a.custom-btn:hover { opacity: 0.9; }
-    /* Texto interno blanco */
+    
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
     }
     
-    /* --- NUEVO V69: BORDES ESPECÍFICOS --- */
-    /* Solo Hotmart lleva borde */
+    /* Hotmart: Borde blanco y margen inferior para separar */
     a.custom-btn.btn-hotmart {
         border: 2px solid white !important;
+        margin-bottom: 20px !important; /* SEPARACIÓN EXTRA */
     }
-    /* Bento NO lleva borde */
+    /* Bento: Sin borde */
     a.custom-btn.btn-bento {
         border: none !important;
     }
 
-    /* 9. BOTÓN PREPARAR ENVÍO (FORMULARIO) */
+    /* 9. BOTÓN PREPARAR ENVÍO */
     [data-testid="stFormSubmitButton"] button {
         background-color: #f0f2f6 !important;
         color: #333333 !important;
@@ -139,11 +139,9 @@ st.markdown("""
     }
 
     /* 10. ELIMINAR "PRESS CTRL+ENTER" */
-    [data-testid="InputInstructions"] {
-        display: none !important;
-    }
+    [data-testid="InputInstructions"] { display: none !important; }
     
-    /* 11. CAJA DE COMENTARIOS (ÁREA BLANCA) */
+    /* 11. CAJA DE COMENTARIOS */
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span {
         color: #333333 !important;
@@ -183,8 +181,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LAYOUT DE CABECERA ---
-col_ban1, col_ban2 = st.columns([2, 1], gap="large")
+# --- LAYOUT DE CABECERA (BANNER MÁS GRANDE V70) ---
+# Cambiamos la proporción de 2:1 a 1.5:1 para dar más ancho a la imagen
+col_ban1, col_ban2 = st.columns([1.5, 1], gap="large")
 
 with col_ban1:
     st.markdown('<h1 style="color:#004c70 !important; font-size:3rem; margin-bottom:10px; padding-bottom:0; line-height: 1.1;">Análisis de Estados Financieros Automatizado</h1>', unsafe_allow_html=True)
