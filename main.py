@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V68 DEFINITIVO) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V69 FINALÍSIMO) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL (Siempre claro) */
@@ -31,7 +31,9 @@ st.markdown("""
     section[data-testid="stSidebar"] p, 
     section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] li,
-    section[data-testid="stSidebar"] span {
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] div,
+    section[data-testid="stSidebar"] small {
         color: white !important;
     }
 
@@ -50,25 +52,32 @@ st.markdown("""
     }
 
     /* 5. ARREGLO CAJA DE CARGA (FILE UPLOADER) */
-    /* Forzamos el fondo de la zona de drop a OSCURO para que el texto blanco se lea */
+    /* Zona de drop */
     [data-testid="stFileUploaderDropzone"] {
         background-color: #333333 !important;
         border: 1px dashed white !important;
     }
-    [data-testid="stFileUploaderDropzone"] div,
-    [data-testid="stFileUploaderDropzone"] span,
-    [data-testid="stFileUploaderDropzone"] small {
-        color: white !important;
-    }
-    /* El botón Browse dentro del uploader */
+    /* Botón Browse */
     [data-testid="stFileUploader"] button {
         background-color: #f0f2f6 !important;
         color: #333333 !important;
         border: none !important;
     }
+    
+    /* --- NUEVO V69: ARREGLO VISIBILIDAD ARCHIVO CARGADO Y 'X' --- */
+    /* Nombre del archivo y peso (Ej: Estados Financieros.xlsx 38.9KB) */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFileName"],
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFileStatus"] {
+        color: white !important;
+    }
+    /* Icono 'X' para eliminar */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDeleteBtn"] svg {
+        fill: white !important;
+        stroke: white !important;
+        color: white !important;
+    }
 
     /* 6. ARREGLO ALERTAS (WARNING/INFO) EN SIDEBAR */
-    /* Forzamos fondo claro y texto oscuro para que se lea sobre el azul */
     section[data-testid="stSidebar"] .stAlert {
         background-color: #ffeba0 !important; /* Fondo amarillo claro */
         color: #333333 !important;
@@ -91,32 +100,38 @@ st.markdown("""
         color: #004c70 !important;
     }
 
-    /* 8. BOTONES PERSONALIZADOS (HOTMART/BENTO) - BORDE BLANCO */
+    /* 8. BOTONES PERSONALIZADOS (HOTMART/BENTO) - V69 DIFERENCIADOS */
     a.custom-btn {
         text-decoration: none !important;
         display: block !important;
-        border: 2px solid white !important; /* Borde forzado */
         border-radius: 10px !important;
-        overflow: hidden !important; /* Para que el borde siga al radio */
+        overflow: hidden !important;
     }
     a.custom-btn:hover { opacity: 0.9; }
     /* Texto interno blanco */
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
-        border: none !important; /* Evitar doble borde */
+    }
+    
+    /* --- NUEVO V69: BORDES ESPECÍFICOS --- */
+    /* Solo Hotmart lleva borde */
+    a.custom-btn.btn-hotmart {
+        border: 2px solid white !important;
+    }
+    /* Bento NO lleva borde */
+    a.custom-btn.btn-bento {
+        border: none !important;
     }
 
     /* 9. BOTÓN PREPARAR ENVÍO (FORMULARIO) */
-    /* Estado Normal */
     [data-testid="stFormSubmitButton"] button {
         background-color: #f0f2f6 !important;
         color: #333333 !important;
         border: 1px solid #ccc !important;
     }
-    /* Estado Hover (Mouse encima) */
     [data-testid="stFormSubmitButton"] button:hover {
         background-color: #ffffff !important;
-        color: #000000 !important; /* Texto negro forzado */
+        color: #000000 !important;
         border-color: #000 !important;
     }
     [data-testid="stFormSubmitButton"] button:hover p {
@@ -129,7 +144,6 @@ st.markdown("""
     }
     
     /* 11. CAJA DE COMENTARIOS (ÁREA BLANCA) */
-    /* Texto del título negro */
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span {
         color: #333333 !important;
@@ -138,7 +152,6 @@ st.markdown("""
     div[data-testid="stExpander"] summary svg {
         fill: #333333 !important;
     }
-    /* Fondo del área de texto blanco y texto negro */
     .stTextArea textarea {
         background-color: #ffffff !important;
         color: #333333 !important;
@@ -147,7 +160,7 @@ st.markdown("""
         color: #333333 !important;
     }
 
-    /* 12. ESTILOS GENERALES (Títulos H1, H2...) */
+    /* 12. ESTILOS GENERALES */
     h1 { color: #004c70 !important; }
     h2, h3, h4, h5, h6 { color: #333333 !important; }
     
@@ -157,7 +170,6 @@ st.markdown("""
         color: #444444 !important;
     }
     
-    /* Tablas */
     .stDataFrame { font-size: 1.3rem !important; }
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
         background-color: #004c70;
@@ -831,42 +843,38 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN HOTMART ---
+    # --- BOTÓN HOTMART (CON CLASE btn-hotmart) ---
     st.markdown("""
-    <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn">
+    <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn btn-hotmart">
         <div style="
             width: 100%;
             background-color: #004c70; 
             color: white; 
             padding: 15px; 
             text-align: center; 
-            border-radius: 10px; 
             font-weight: bold; 
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
-            border: 2px solid white; /* BORDE FORZADO BLANCO */
         ">
             🔥 Curso Especializado: Análisis y Proyección de EEFF - 25% OFF
         </div>
     </a>
     """, unsafe_allow_html=True)
     
-    # --- BOTÓN BENTO ---
+    # --- BOTÓN BENTO (CON CLASE btn-bento) ---
     st.markdown("""
-    <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn">
+    <a href="https://bento.me/oscar-menacho-consultor-financiero" target="_blank" class="custom-btn btn-bento">
         <div style="
             width: 100%;
             background-color: #ed7d31; 
             color: white; 
             padding: 15px; 
             text-align: center; 
-            border-radius: 10px; 
             font-weight: bold; 
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 20px;
-            border: 2px solid white; /* BORDE FORZADO BLANCO */
         ">
             🎯 Mas cursos y mis servicios
         </div>
@@ -970,7 +978,7 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel! 🚀
+    Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
 
 # --- FEEDBACK FORM MEJORADO (V66/V67) ---
