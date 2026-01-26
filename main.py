@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V67 FINAL) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V68 DEFINITIVO) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL (Siempre claro) */
@@ -18,14 +18,20 @@ st.markdown("""
         background-color: #f9f9f9; 
     }
     
-    /* 2. BARRA LATERAL (SIDEBAR) - FUERZA AZUL CORPORATIVO */
+    /* 2. BARRA LATERAL (SIDEBAR) - AZUL CORPORATIVO */
     section[data-testid="stSidebar"],
     section[data-testid="stSidebar"] > div {
         background-color: #004c70 !important;
     }
     
-    /* 3. TEXTOS DEL SIDEBAR -> SIEMPRE BLANCO (Para contraste con azul) */
-    section[data-testid="stSidebar"] * {
+    /* 3. TEXTOS GENERALES DEL SIDEBAR -> BLANCO */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3, 
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] li,
+    section[data-testid="stSidebar"] span {
         color: white !important;
     }
 
@@ -43,72 +49,105 @@ st.markdown("""
         stroke: white !important;
     }
 
-    /* 5. ARREGLOS ESPECÍFICOS SIDEBAR */
-    /* Botón Browse del Uploader */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        background-color: #f9f9f9 !important;
-        color: #004c70 !important;
+    /* 5. ARREGLO CAJA DE CARGA (FILE UPLOADER) */
+    /* Forzamos el fondo de la zona de drop a OSCURO para que el texto blanco se lea */
+    [data-testid="stFileUploaderDropzone"] {
+        background-color: #333333 !important;
+        border: 1px dashed white !important;
+    }
+    [data-testid="stFileUploaderDropzone"] div,
+    [data-testid="stFileUploaderDropzone"] span,
+    [data-testid="stFileUploaderDropzone"] small {
+        color: white !important;
+    }
+    /* El botón Browse dentro del uploader */
+    [data-testid="stFileUploader"] button {
+        background-color: #f0f2f6 !important;
+        color: #333333 !important;
         border: none !important;
     }
-    /* Botón Descargar Plantilla */
+
+    /* 6. ARREGLO ALERTAS (WARNING/INFO) EN SIDEBAR */
+    /* Forzamos fondo claro y texto oscuro para que se lea sobre el azul */
+    section[data-testid="stSidebar"] .stAlert {
+        background-color: #ffeba0 !important; /* Fondo amarillo claro */
+        color: #333333 !important;
+    }
+    section[data-testid="stSidebar"] .stAlert p,
+    section[data-testid="stSidebar"] .stAlert div {
+        color: #333333 !important; /* Texto negro */
+    }
+    section[data-testid="stSidebar"] .stAlert svg {
+        fill: #333333 !important;
+    }
+
+    /* 7. BOTÓN DESCARGAR PLANTILLA */
     section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
         background-color: #f9f9f9 !important;
         color: #004c70 !important;
-        border: 1px solid white !important;
+        border: 2px solid white !important;
     }
     section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
         color: #004c70 !important;
     }
 
-    /* 6. CORRECCIÓN ALERTAS (INFO/WARNING/ERROR) - SOLUCIÓN TEXTO INVISIBLE */
-    /* Forzamos que el texto dentro de las cajas de colores sea SIEMPRE NEGRO */
-    div[data-testid="stAlert"] {
-        color: #333333 !important;
+    /* 8. BOTONES PERSONALIZADOS (HOTMART/BENTO) - BORDE BLANCO */
+    a.custom-btn {
+        text-decoration: none !important;
+        display: block !important;
+        border: 2px solid white !important; /* Borde forzado */
+        border-radius: 10px !important;
+        overflow: hidden !important; /* Para que el borde siga al radio */
     }
-    div[data-testid="stAlert"] p, 
-    div[data-testid="stAlert"] li,
-    div[data-testid="stAlert"] div {
-        color: #333333 !important;
-    }
-    /* Iconos de las alertas (la manito, el triangulo) en negro */
-    div[data-testid="stAlert"] svg {
-        fill: #333333 !important;
-        color: #333333 !important;
+    a.custom-btn:hover { opacity: 0.9; }
+    /* Texto interno blanco */
+    section[data-testid="stSidebar"] a.custom-btn div {
+        color: white !important;
+        border: none !important; /* Evitar doble borde */
     }
 
-    /* 7. CAJA DE COMENTARIOS (TEXT AREA Y EXPANDER) */
-    /* Título del Expander */
+    /* 9. BOTÓN PREPARAR ENVÍO (FORMULARIO) */
+    /* Estado Normal */
+    [data-testid="stFormSubmitButton"] button {
+        background-color: #f0f2f6 !important;
+        color: #333333 !important;
+        border: 1px solid #ccc !important;
+    }
+    /* Estado Hover (Mouse encima) */
+    [data-testid="stFormSubmitButton"] button:hover {
+        background-color: #ffffff !important;
+        color: #000000 !important; /* Texto negro forzado */
+        border-color: #000 !important;
+    }
+    [data-testid="stFormSubmitButton"] button:hover p {
+        color: #000000 !important;
+    }
+
+    /* 10. ELIMINAR "PRESS CTRL+ENTER" */
+    [data-testid="InputInstructions"] {
+        display: none !important;
+    }
+    
+    /* 11. CAJA DE COMENTARIOS (ÁREA BLANCA) */
+    /* Texto del título negro */
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span {
         color: #333333 !important;
         font-weight: 600;
     }
     div[data-testid="stExpander"] summary svg {
-        fill: #333333 !important; /* Flechita negra */
+        fill: #333333 !important;
     }
-    
-    /* El área de texto donde se escribe */
+    /* Fondo del área de texto blanco y texto negro */
     .stTextArea textarea {
         background-color: #ffffff !important;
         color: #333333 !important;
-        border: 1px solid #cccccc !important;
     }
-    /* El texto "Escribe tu sugerencia aquí" (Label) */
     .stTextArea label p {
         color: #333333 !important;
     }
-    /* El texto de marcador de posición (Placeholder) "Tu opinión ayuda..." */
-    .stTextArea textarea::placeholder {
-        color: #666666 !important;
-        opacity: 1 !important;
-    }
-    
-    /* 8. OCULTAR INSTRUCCIÓN "PRESS CTRL+ENTER" */
-    div[data-testid="stInputInstructions"] {
-        display: none !important;
-    }
 
-    /* 9. ESTILOS GENERALES (Títulos, Pestañas, Tablas) */
+    /* 12. ESTILOS GENERALES (Títulos H1, H2...) */
     h1 { color: #004c70 !important; }
     h2, h3, h4, h5, h6 { color: #333333 !important; }
     
@@ -125,10 +164,6 @@ st.markdown("""
         color: white;
         font-size: 1.2rem !important;
     }
-    
-    a.custom-btn { text-decoration: none !important; }
-    a.custom-btn:hover { opacity: 0.9; }
-    
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
         padding-top: 0px !important;
@@ -810,6 +845,7 @@ with st.sidebar:
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 10px;
+            border: 2px solid white; /* BORDE FORZADO BLANCO */
         ">
             🔥 Curso Especializado: Análisis y Proyección de EEFF - 25% OFF
         </div>
@@ -830,6 +866,7 @@ with st.sidebar:
             font-size: 16px;
             box-shadow: 0px 3px 5px rgba(0,0,0,0.2);
             margin-bottom: 20px;
+            border: 2px solid white; /* BORDE FORZADO BLANCO */
         ">
             🎯 Mas cursos y mis servicios
         </div>
@@ -933,7 +970,7 @@ else:
     st.info("""
     👋 ¡Hola! Para usar esta App, primero descarga la plantilla en el panel lateral, complétala y súbela.
     
-    Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
+    Después, ¡Descarga tu Reporte en Excel! 🚀
     """)
 
 # --- FEEDBACK FORM MEJORADO (V66/V67) ---
