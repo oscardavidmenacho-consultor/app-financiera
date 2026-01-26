@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V63) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V64 FINAL) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL */
@@ -23,101 +23,100 @@ st.markdown("""
         background-color: #f0f2f6 !important;
     }
     
-    /* 3. ARREGLO DE FLECHAS (SOLUCIÓN V63: REDUNDANCIA TOTAL) */
-    /* Forzamos el color gris oscuro en todos los niveles del icono */
-    [data-testid="stSidebarCollapseButton"] svg,
-    [data-testid="stSidebarExpandButton"] svg,
-    [data-testid="stSidebarCollapseButton"] svg path,
-    [data-testid="stSidebarExpandButton"] svg path {
-        fill: #333333 !important;
-        stroke: #333333 !important;
-        color: #333333 !important;
+    /* 3. ARREGLO DE FLECHAS (SOLUCIÓN V64: INVERSIÓN) */
+    /* Invertimos el color del icono. Si Streamlit lo pone Blanco (Dark Mode), esto lo vuelve NEGRO. */
+    button[data-testid="stSidebarCollapseButton"] > svg,
+    button[data-testid="stSidebarExpandButton"] > svg {
+        filter: invert(1) !important;
     }
 
-    /* 4. TEXTOS DEL SIDEBAR EN NEGRO (General) */
+    /* 4. TEXTOS DEL SIDEBAR QUE DEBEN SER NEGROS */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] li,
-    section[data-testid="stSidebar"] label {
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] .stMarkdown p,
+    section[data-testid="stSidebar"] li {
         color: #333333 !important;
     }
-    /* Nombre del archivo cargado debajo de la caja */
+    
+    /* Arreglo específico para el nombre del archivo cargado (que se veía borroso) */
     section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileName"] {
         color: #333333 !important;
     }
-
-    /* 5. CORRECCIÓN: BOTÓN DESCARGAR PLANTILLA (Streamlit) */
-    /* Fondo oscuro, texto blanco */
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
-        background-color: #333333 !important;
-        color: white !important;
-        border-color: #333333 !important;
+    section[data-testid="stSidebar"] div[data-testid="stFileUploaderFileStatus"] {
+        color: #333333 !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button:hover {
-        background-color: #555555 !important;
-        color: white !important;
-    }
-    /* Asegurar que el texto interno (p) sea blanco */
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
-        color: white !important;
+    /* La X para eliminar archivo */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDeleteBtn"] svg {
+        fill: #333333 !important;
     }
 
-    /* 6. CORRECCIÓN: CAJA DE CARGA (FILE UPLOADER) */
-    /* Textos internos de la caja negra deben ser blancos */
+    /* 5. EXCEPCIONES: ELEMENTOS QUE DEBEN SER BLANCOS */
+    
+    /* A) Textos DENTRO de la caja de carga (Drag and drop) */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] small,
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] div[data-testid="stFileUploaderDropzone"] span {
         color: white !important;
     }
+    /* Botón "Browse" dentro del uploader */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        color: white !important; /* Botón Browse */
+        color: white !important;
     }
 
-    /* 7. CORRECCIÓN: BOTONES PERSONALIZADOS (HOTMART/BENTO) */
+    /* B) Botón Descargar Plantilla (Streamlit Standard) */
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
+        color: white !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
+        color: white !important;
+    }
+
+    /* C) Tus Botones Personalizados (Hotmart/Bento) */
     section[data-testid="stSidebar"] a.custom-btn div {
         color: white !important;
     }
 
-    /* 8. CAJA DE COMENTARIOS (EXPANDER) */
+    /* 6. CAJA DE COMENTARIOS (EXPANDER) */
     div[data-testid="stExpander"] summary p,
-    div[data-testid="stExpander"] summary span,
-    div[data-testid="stExpander"] summary svg {
+    div[data-testid="stExpander"] summary span {
         color: #333333 !important;
-        fill: #333333 !important;
+        font-weight: 600;
+    }
+    div[data-testid="stExpander"] summary svg {
+        filter: invert(1) !important; /* Invertimos también la flechita del expander */
     }
 
-    /* 9. ESTILOS GENERALES (Títulos principales, pestañas) */
+    /* 7. ESTILOS GENERALES DE LA APP */
     h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
-    /* Título principal azul */
+    /* Título principal (H1) en Azul */
     h1 {
         color: #004c70 !important;
     }
+    
+    /* Pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
         font-size: 1.2rem;
         font-weight: 600;
         color: #444444 !important;
     }
-    a.custom-btn {
-        text-decoration: none !important;
-    }
-    a.custom-btn:hover {
-        opacity: 0.9;
-    }
+    
+    /* Tablas */
     .stDataFrame {
         font-size: 1.3rem !important;
-    }
-    .stAlert p {
-        font-size: 1.2rem !important;
-        line-height: 1.5 !important;
     }
     div[data-testid="stVerticalBlock"] div[data-testid="stDataFrame"] div[class*="ColumnHeaders"] {
         background-color: #004c70;
         color: white;
         font-size: 1.2rem !important;
     }
+    
+    /* Ajustes varios */
+    a.custom-btn { text-decoration: none !important; }
+    a.custom-btn:hover { opacity: 0.9; }
+    .stAlert p { font-size: 1.2rem !important; line-height: 1.5 !important; }
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
         padding-top: 0px !important;
