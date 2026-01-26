@@ -10,7 +10,7 @@ import os
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Oscar Menacho | Análisis Financiero", page_icon="📊", layout="wide")
 
-# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V65 DARK SIDEBAR) ---
+# --- INYECCIÓN DE CSS (ESTILOS VISUALES - V66 FINAL) ---
 st.markdown("""
 <style>
     /* 1. FONDO APP PRINCIPAL (Área de trabajo) - CLARO */
@@ -24,21 +24,11 @@ st.markdown("""
     }
     
     /* 3. TEXTOS DEL SIDEBAR -> BLANCO */
-    /* Al ser el fondo oscuro, forzamos todo el texto a blanco */
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] li,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] div,
-    section[data-testid="stSidebar"] span,
-    section[data-testid="stSidebar"] small {
+    section[data-testid="stSidebar"] * {
         color: white !important;
     }
 
     /* 4. ICONOS Y FLECHAS DEL SIDEBAR -> BLANCO */
-    /* Esto arregla la flecha rebelde: Blanco sobre Azul = VISIBLE */
     section[data-testid="stSidebar"] svg,
     [data-testid="stSidebarCollapseButton"] svg,
     [data-testid="stSidebarExpandButton"] svg {
@@ -46,50 +36,67 @@ st.markdown("""
         stroke: white !important;
         color: white !important;
     }
-    /* Aseguramos el trazo interno */
     [data-testid="stSidebarCollapseButton"] svg path,
     [data-testid="stSidebarExpandButton"] svg path {
         fill: white !important;
         stroke: white !important;
     }
 
-    /* 5. CAJA DE CARGA (FILE UPLOADER) */
-    /* Ajustamos el botón "Browse" para que se vea bien */
+    /* 5. CORRECCIONES ESPECÍFICAS EN SIDEBAR (Para que se vean bien sobre azul) */
+    /* Botón "Browse" de la caja de carga */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
         background-color: #f9f9f9 !important;
-        color: #004c70 !important; /* Texto azul para contraste */
+        color: #004c70 !important;
         border: none !important;
     }
-
-    /* 6. BOTÓN DESCARGAR PLANTILLA */
+    /* Botón Descargar Plantilla */
     section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button {
         background-color: #f9f9f9 !important;
         color: #004c70 !important;
         border: 1px solid white !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button:hover {
-        background-color: #e0e0e0 !important;
-    }
     section[data-testid="stSidebar"] [data-testid="stDownloadButton"] button p {
         color: #004c70 !important;
     }
 
-    /* 7. CAJA DE COMENTARIOS (EXPANDER - ÁREA PRINCIPAL) */
-    /* Como está en el área blanca, debe ser oscuro */
-    div[data-testid="stExpander"] summary p,
-    div[data-testid="stExpander"] summary span,
-    div[data-testid="stExpander"] summary svg {
+    /* 6. CORRECCIÓN ÁREA DE COMENTARIOS (El problema de la caja negra) */
+    /* Forzamos que el Expander y el Text Area sean BLANCOS con texto NEGRO */
+    
+    /* Cabecera del Expander */
+    div[data-testid="stExpander"] summary {
+        background-color: #ffffff !important;
         color: #333333 !important;
+        border: 1px solid #ddd !important;
+    }
+    div[data-testid="stExpander"] summary p, 
+    div[data-testid="stExpander"] summary span {
+        color: #333333 !important;
+    }
+    div[data-testid="stExpander"] summary svg {
         fill: #333333 !important;
     }
-
-    /* 8. ESTILOS GENERALES (ÁREA PRINCIPAL) */
-    /* Títulos del contenido principal en gris oscuro */
-    div[data-testid="stVerticalBlock"] > div > h2,
-    div[data-testid="stVerticalBlock"] > div > h3,
-    div[data-testid="stVerticalBlock"] > div > h4 {
+    
+    /* Cuerpo del Expander */
+    div[data-testid="stExpander"] {
+        background-color: #ffffff !important;
         color: #333333 !important;
     }
+    
+    /* Caja de Texto (Text Area) */
+    .stTextArea textarea {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+        border: 1px solid #ccc !important;
+    }
+    .stTextArea label p {
+        color: #333333 !important; /* Etiqueta del input */
+    }
+
+    /* 7. ESTILOS GENERALES (ÁREA PRINCIPAL) */
+    h1, h2, h3, h4, h5, h6 {
+        color: #333333 !important;
+    }
+    h1 { color: #004c70 !important; } /* Título principal azul */
     
     /* Pestañas */
     .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
@@ -110,10 +117,6 @@ st.markdown("""
         font-size: 1.2rem !important;
     }
     
-    /* Título H1 Principal (Excepción para que sea Azul) */
-    h1 { color: #004c70 !important; }
-    
-    /* Ajuste márgenes */
     div[data-testid="stMarkdownContainer"] > h3, div[data-testid="stMarkdownContainer"] > h4 {
         margin-top: 0px !important;
         padding-top: 0px !important;
@@ -438,7 +441,7 @@ def crear_figuras_dashboard(df_balance, df_pyg, df_indicadores, df_ratios):
     fig4 = apply_style(fig4, "Capital de Trabajo (AC vs PC)", max_cap)
     figs['CapitalTrabajo'] = fig4
 
-    # 5. Grandes Grupos del Balance
+    # 5. Grandes Grupos del Balance (TÍTULO CORREGIDO)
     categories = ['Activo Cte', 'Activo No Cte', 'Pasivo Cte', 'Pasivo No Cte', 'Patrimonio']
     fig_grupos = go.Figure()
     max_val_grupos = 0
@@ -781,7 +784,7 @@ with st.sidebar:
     
     st.divider()
     
-    # --- BOTÓN HOTMART (CON BORDE BLANCO V65) ---
+    # --- BOTÓN HOTMART ---
     st.markdown("""
     <a href="https://pay.hotmart.com/J94144104S?off=37odx5m2&checkoutMode=10&offDiscount=JEMP25&src=appeeff" target="_blank" class="custom-btn">
         <div style="
@@ -922,27 +925,39 @@ else:
     Después, ¡Descarga tu Reporte en Excel totalmente gratis! 🚀
     """)
 
-# --- FEEDBACK FORM (V52/V53) ---
+# --- FEEDBACK FORM MEJORADO (V66) ---
 st.divider()
-with st.expander("💬 ¿Tienes comentarios o sugerencias? Escríbeme aquí"):
-    feedback = st.text_area("Tu opinión ayuda a mejorar la herramienta:", placeholder="Escribe aquí...")
-    if feedback:
-        body_email = feedback.replace('\n', '%0A')
-        body_encoded = urllib.parse.quote(body_email)
-        # BOTON NEGRO COMO PEDISTE
-        st.markdown(f'''
-            <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" target="_blank" class="custom-btn">
-                <div style="
-                    background-color: #333333; 
-                    color: white; 
-                    padding: 10px; 
-                    text-align: center; 
-                    border-radius: 5px; 
-                    font-weight: bold;
-                    margin-top: 10px;
-                    width: 200px;
-                ">
-                    ✉️ Enviar Comentario
-                </div>
-            </a>
-        ''', unsafe_allow_html=True)
+st.subheader("💬 ¿Tienes comentarios?")
+
+# USAMOS ST.FORM PARA EVITAR EL "CTRL+ENTER"
+with st.form(key='feedback_form'):
+    feedback_text = st.text_area("Escribe tu sugerencia aquí:", placeholder="Tu opinión ayuda a mejorar esta herramienta...")
+    submit_button = st.form_submit_button(label="💾 Preparar envío")
+
+if submit_button and feedback_text:
+    body_email = feedback_text.replace('\n', '%0A')
+    body_encoded = urllib.parse.quote(body_email)
+    
+    # MENSAJE DE ÉXITO Y BOTÓN REAL
+    st.success("¡Texto guardado! Pulsa el botón negro para abrir tu correo:")
+    
+    # EL LINK YA NO TIENE TARGET="_BLANK" PARA EVITAR PANTALLA BLANCA
+    st.markdown(f'''
+        <a href="mailto:oscar.david.menacho@gmail.com?subject=Feedback%20App%20Financiera&body={body_encoded}" class="custom-btn">
+            <div style="
+                background-color: #333333; 
+                color: white; 
+                padding: 12px; 
+                text-align: center; 
+                border-radius: 5px; 
+                font-weight: bold;
+                margin-top: 5px;
+                width: 250px;
+                cursor: pointer;
+            ">
+                ✉️ ENVIAR AHORA (Click Aquí)
+            </div>
+        </a>
+    ''', unsafe_allow_html=True)
+elif submit_button and not feedback_text:
+    st.warning("⚠️ Por favor escribe algo antes de preparar el envío.")
